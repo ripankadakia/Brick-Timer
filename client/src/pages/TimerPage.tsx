@@ -5,6 +5,23 @@ import IntervalInput from "@/components/IntervalInput";
 import ActiveTimer from "@/components/ActiveTimer";
 import WorkoutSummary from "@/components/WorkoutSummary";
 import { getSavedSegmentNames, saveSegmentName, removeSegmentName } from "@/lib/segmentNames";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface Interval {
   id: string;
@@ -21,6 +38,57 @@ interface CompletedSegment {
   duration: number;
 }
 
+function SortableIntervalInput({
+  interval,
+  onNameChange,
+  onRemove,
+  onEnter,
+  suggestions,
+  onRemoveSuggestion,
+  setInputRef,
+}: {
+  interval: Interval;
+  onNameChange: (name: string) => void;
+  onRemove: () => void;
+  onEnter: () => void;
+  suggestions: string[];
+  onRemoveSuggestion: (name: string) => void;
+  setInputRef: (id: string, element: HTMLInputElement | null) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id: interval.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const callbackRef = (element: HTMLInputElement | null) => {
+    setInputRef(interval.id, element);
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <IntervalInput
+        id={interval.id}
+        name={interval.name}
+        onNameChange={onNameChange}
+        onRemove={onRemove}
+        onEnter={onEnter}
+        suggestions={suggestions}
+        onRemoveSuggestion={onRemoveSuggestion}
+        dragHandleProps={{ ...attributes, ...listeners }}
+        setInputRef={callbackRef}
+      />
+    </div>
+  );
+}
+
 export default function TimerPage() {
   const [intervals, setIntervals] = useState<Interval[]>([
     { id: "1", name: "" },
@@ -35,6 +103,14 @@ export default function TimerPage() {
   const [summaryData, setSummaryData] = useState<{ segments: CompletedSegment[]; totalTime: number } | null>(null);
   const [savedSegmentNames, setSavedSegmentNames] = useState<string[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const inputRefs = useRef<Map<string, HTMLInputElement>>(new Map());
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     setSavedSegmentNames(getSavedSegmentNames());
@@ -59,8 +135,29 @@ export default function TimerPage() {
     };
   }, [isActive, isPaused]);
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setIntervals((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
   const addInterval = () => {
-    setIntervals([...intervals, { id: Date.now().toString(), name: "" }]);
+    const newId = Date.now().toString();
+    setIntervals([...intervals, { id: newId, name: "" }]);
+    
+    // Focus the new input after a brief delay
+    setTimeout(() => {
+      const input = inputRefs.current.get(newId);
+      if (input) {
+        input.focus();
+      }
+    }, 100);
   };
 
   const removeInterval = (id: string) => {
@@ -173,20 +270,37 @@ export default function TimerPage() {
     <div className="flex flex-col h-full p-4 pb-24">
       <h1 className="text-2xl font-bold mb-6">New Workout</h1>
 
-      <div className="flex-1 overflow-y-auto space-y-3 mb-4">
-        {intervals.map((interval) => (
-          <IntervalInput
-            key={interval.id}
-            id={interval.id}
-            name={interval.name}
-            onNameChange={(name) => updateIntervalName(interval.id, name)}
-            onRemove={() => removeInterval(interval.id)}
-            onEnter={addInterval}
-            suggestions={savedSegmentNames}
-            onRemoveSuggestion={handleRemoveSuggestion}
-          />
-        ))}
-      </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={intervals.map((i) => i.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="flex-1 overflow-y-auto space-y-3 mb-4">
+            {intervals.map((interval) => (
+              <SortableIntervalInput
+                key={interval.id}
+                interval={interval}
+                onNameChange={(name) => updateIntervalName(interval.id, name)}
+                onRemove={() => removeInterval(interval.id)}
+                onEnter={addInterval}
+                suggestions={savedSegmentNames}
+                onRemoveSuggestion={handleRemoveSuggestion}
+                setInputRef={(id, element) => {
+                  if (element) {
+                    inputRefs.current.set(id, element);
+                  } else {
+                    inputRefs.current.delete(id);
+                  }
+                }}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       <div className="flex flex-col gap-3">
         <Button

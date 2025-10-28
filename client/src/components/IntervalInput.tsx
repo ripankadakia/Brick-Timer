@@ -12,6 +12,8 @@ interface IntervalInputProps {
   onEnter?: () => void;
   suggestions?: string[];
   onRemoveSuggestion?: (name: string) => void;
+  dragHandleProps?: any;
+  setInputRef?: (element: HTMLInputElement | null) => void;
 }
 
 export default function IntervalInput({
@@ -22,23 +24,35 @@ export default function IntervalInput({
   onEnter,
   suggestions = [],
   onRemoveSuggestion,
+  dragHandleProps,
+  setInputRef,
 }: IntervalInputProps) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [inputElement, setInputElement] = useState<HTMLInputElement | null>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
-  const filteredSuggestions = suggestions.filter((suggestion) =>
-    suggestion.toLowerCase().includes(name.toLowerCase()) && suggestion.toLowerCase() !== name.toLowerCase()
-  );
+  const handleRef = (element: HTMLInputElement | null) => {
+    setInputElement(element);
+    if (setInputRef) {
+      setInputRef(element);
+    }
+  };
+
+  const filteredSuggestions = name.trim() 
+    ? suggestions.filter((suggestion) =>
+        suggestion.toLowerCase().includes(name.toLowerCase()) && 
+        suggestion.toLowerCase() !== name.toLowerCase()
+      )
+    : [];
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         suggestionsRef.current &&
         !suggestionsRef.current.contains(event.target as Node) &&
-        inputRef.current &&
-        !inputRef.current.contains(event.target as Node)
+        inputElement &&
+        !inputElement.contains(event.target as Node)
       ) {
         setShowSuggestions(false);
       }
@@ -46,7 +60,7 @@ export default function IntervalInput({
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [inputElement]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -87,14 +101,21 @@ export default function IntervalInput({
   return (
     <div className="relative">
       <Card className="p-4 flex items-center gap-3">
-        <GripVertical className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+        <div {...dragHandleProps} className="cursor-grab active:cursor-grabbing">
+          <GripVertical className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+        </div>
         <Input
-          ref={inputRef}
+          ref={handleRef}
           data-testid={`input-interval-${id}`}
           value={name}
           onChange={(e) => handleInputChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          onFocus={() => name && setShowSuggestions(true)}
+          onFocus={() => {
+            if (name.trim()) {
+              setShowSuggestions(true);
+            }
+          }}
+          autoComplete="off"
           placeholder="e.g., Run, Bike, Row"
           className="flex-1"
         />

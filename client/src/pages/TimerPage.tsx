@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import IntervalInput from "@/components/IntervalInput";
 import ActiveTimer from "@/components/ActiveTimer";
 import WorkoutSummary from "@/components/WorkoutSummary";
+import { getSavedSegmentNames, saveSegmentName, removeSegmentName } from "@/lib/segmentNames";
 
 interface Interval {
   id: string;
@@ -32,7 +33,12 @@ export default function TimerPage() {
   const [completedSegments, setCompletedSegments] = useState<ActiveSegment[]>([]);
   const [showSummary, setShowSummary] = useState(false);
   const [summaryData, setSummaryData] = useState<{ segments: CompletedSegment[]; totalTime: number } | null>(null);
+  const [savedSegmentNames, setSavedSegmentNames] = useState<string[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setSavedSegmentNames(getSavedSegmentNames());
+  }, []);
 
   useEffect(() => {
     if (isActive && !isPaused) {
@@ -72,6 +78,12 @@ export default function TimerPage() {
   const startWorkout = () => {
     const validIntervals = intervals.filter((i) => i.name.trim());
     if (validIntervals.length >= 2) {
+      // Save all segment names
+      validIntervals.forEach((interval) => {
+        saveSegmentName(interval.name);
+      });
+      setSavedSegmentNames(getSavedSegmentNames());
+      
       setIntervals(validIntervals);
       setIsActive(true);
       setIsPaused(false);
@@ -80,6 +92,11 @@ export default function TimerPage() {
       setTotalTime(0);
       setCompletedSegments([]);
     }
+  };
+
+  const handleRemoveSuggestion = (name: string) => {
+    removeSegmentName(name);
+    setSavedSegmentNames(getSavedSegmentNames());
   };
 
   const togglePause = () => {
@@ -165,6 +182,8 @@ export default function TimerPage() {
             onNameChange={(name) => updateIntervalName(interval.id, name)}
             onRemove={() => removeInterval(interval.id)}
             onEnter={addInterval}
+            suggestions={savedSegmentNames}
+            onRemoveSuggestion={handleRemoveSuggestion}
           />
         ))}
       </div>

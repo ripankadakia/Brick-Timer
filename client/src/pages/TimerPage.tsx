@@ -164,6 +164,7 @@ export default function TimerPage() {
             name={interval.name}
             onNameChange={(name) => updateIntervalName(interval.id, name)}
             onRemove={() => removeInterval(interval.id)}
+            onEnter={addInterval}
           />
         ))}
       </div>

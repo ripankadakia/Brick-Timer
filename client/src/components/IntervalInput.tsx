@@ -8,6 +8,7 @@ interface IntervalInputProps {
   name: string;
   onNameChange: (name: string) => void;
   onRemove: () => void;
+  onEnter?: () => void;
 }
 
 export default function IntervalInput({
@@ -15,7 +16,15 @@ export default function IntervalInput({
   name,
   onNameChange,
   onRemove,
+  onEnter,
 }: IntervalInputProps) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && onEnter) {
+      e.preventDefault();
+      onEnter();
+    }
+  };
+
   return (
     <Card className="p-4 flex items-center gap-3">
       <GripVertical className="w-5 h-5 text-muted-foreground flex-shrink-0" />
@@ -23,6 +32,7 @@ export default function IntervalInput({
         data-testid={`input-interval-${id}`}
         value={name}
         onChange={(e) => onNameChange(e.target.value)}
+        onKeyDown={handleKeyDown}
         placeholder="e.g., Run, Bike, Row"
         className="flex-1"
       />

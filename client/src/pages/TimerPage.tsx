@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import IntervalInput from "@/components/IntervalInput";
 import ActiveTimer from "@/components/ActiveTimer";
+import WorkoutSummary from "@/components/WorkoutSummary";
 
 interface Interval {
   id: string;
@@ -12,6 +13,11 @@ interface Interval {
 interface ActiveSegment {
   name: string;
   startTime: number;
+}
+
+interface CompletedSegment {
+  name: string;
+  duration: number;
 }
 
 export default function TimerPage() {
@@ -24,6 +30,8 @@ export default function TimerPage() {
   const [currentSegmentTime, setCurrentSegmentTime] = useState(0);
   const [totalTime, setTotalTime] = useState(0);
   const [completedSegments, setCompletedSegments] = useState<ActiveSegment[]>([]);
+  const [showSummary, setShowSummary] = useState(false);
+  const [summaryData, setSummaryData] = useState<{ segments: CompletedSegment[]; totalTime: number } | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -80,33 +88,53 @@ export default function TimerPage() {
 
   const completeSegment = () => {
     const currentSegment = intervals[currentSegmentIndex];
-    setCompletedSegments([
+    const updatedCompletedSegments = [
       ...completedSegments,
       { name: currentSegment.name, startTime: currentSegmentTime },
-    ]);
+    ];
+    setCompletedSegments(updatedCompletedSegments);
 
     if (currentSegmentIndex < intervals.length - 1) {
       setCurrentSegmentIndex(currentSegmentIndex + 1);
       setCurrentSegmentTime(0);
     } else {
-      // Workout complete
+      // Workout complete - show summary
       setIsActive(false);
       setIsPaused(false);
-      console.log("Workout completed!", {
-        totalTime,
-        segments: [
-          ...completedSegments,
-          { name: currentSegment.name, startTime: currentSegmentTime },
-        ],
+      
+      const finalSegments = updatedCompletedSegments.map(seg => ({
+        name: seg.name,
+        duration: seg.startTime
+      }));
+      
+      setSummaryData({
+        segments: finalSegments,
+        totalTime: totalTime
       });
-      // Reset to setup view
-      setIntervals([{ id: Date.now().toString(), name: "" }]);
-      setCurrentSegmentIndex(0);
-      setCurrentSegmentTime(0);
-      setTotalTime(0);
-      setCompletedSegments([]);
+      setShowSummary(true);
     }
   };
+
+  const handleSummaryDone = () => {
+    // Reset everything to start a new workout
+    setShowSummary(false);
+    setSummaryData(null);
+    setIntervals([{ id: Date.now().toString(), name: "" }]);
+    setCurrentSegmentIndex(0);
+    setCurrentSegmentTime(0);
+    setTotalTime(0);
+    setCompletedSegments([]);
+  };
+
+  if (showSummary && summaryData) {
+    return (
+      <WorkoutSummary
+        segments={summaryData.segments}
+        totalTime={summaryData.totalTime}
+        onDone={handleSummaryDone}
+      />
+    );
+  }
 
   if (isActive) {
     return (

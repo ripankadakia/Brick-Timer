@@ -1,10 +1,33 @@
 import WorkoutCard from "@/components/WorkoutCard";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import type { Workout, Segment } from "@shared/schema";
 
 export default function HistoryPage() {
+  const { toast } = useToast();
   const { data: workouts, isLoading } = useQuery<{ workout: Workout; segments: Segment[] }[]>({
     queryKey: ["/api/workouts"],
+  });
+
+  const deleteWorkoutMutation = useMutation({
+    mutationFn: async (workoutId: string) => {
+      return apiRequest("DELETE", `/api/workouts/${workoutId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/workouts"] });
+      toast({
+        title: "Workout Deleted",
+        description: "The workout has been permanently deleted.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete workout. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   if (isLoading) {
@@ -46,6 +69,7 @@ export default function HistoryPage() {
               name: seg.name,
               duration: seg.duration,
             }))}
+            onDelete={() => deleteWorkoutMutation.mutate(workout.id)}
           />
         ))}
       </div>

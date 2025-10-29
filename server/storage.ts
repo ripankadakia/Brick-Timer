@@ -7,6 +7,7 @@ export interface IStorage {
   createWorkout(workout: InsertWorkout, segments: Omit<InsertSegment, "workoutId">[]): Promise<{ workout: Workout; segments: Segment[] }>;
   getWorkouts(): Promise<{ workout: Workout; segments: Segment[] }[]>;
   getWorkoutById(id: string): Promise<{ workout: Workout; segments: Segment[] } | undefined>;
+  deleteWorkout(id: string): Promise<void>;
   
   // Segment operations
   getSegmentsByName(name: string): Promise<Segment[]>;
@@ -80,6 +81,16 @@ export class MemStorage implements IStorage {
         return workoutB.date.getTime() - workoutA.date.getTime();
       });
   }
+
+  async deleteWorkout(id: string): Promise<void> {
+    this.workouts.delete(id);
+    // Delete all segments for this workout
+    Array.from(this.segments.entries()).forEach(([segId, seg]) => {
+      if (seg.workoutId === id) {
+        this.segments.delete(segId);
+      }
+    });
+  }
 }
 
 export class DbStorage implements IStorage {
@@ -151,6 +162,11 @@ export class DbStorage implements IStorage {
       .orderBy(desc(workouts.date));
 
     return result.map((r) => r.segments);
+  }
+
+  async deleteWorkout(id: string): Promise<void> {
+    // Cascade delete will automatically remove segments
+    await db.delete(workouts).where(eq(workouts.id, id));
   }
 }
 

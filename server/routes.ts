@@ -62,6 +62,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete a workout
+  app.delete("/api/workouts/:id", async (req, res) => {
+    try {
+      await storage.deleteWorkout(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

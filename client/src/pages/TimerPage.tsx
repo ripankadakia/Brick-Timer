@@ -5,6 +5,9 @@ import IntervalInput from "@/components/IntervalInput";
 import ActiveTimer from "@/components/ActiveTimer";
 import WorkoutSummary from "@/components/WorkoutSummary";
 import { getSavedSegmentNames, saveSegmentName, removeSegmentName } from "@/lib/segmentNames";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import {
   DndContext,
   closestCenter,
@@ -90,6 +93,7 @@ function SortableIntervalInput({
 }
 
 export default function TimerPage() {
+  const { toast } = useToast();
   const [workoutName, setWorkoutName] = useState("New Workout");
   const [intervals, setIntervals] = useState<Interval[]>([
     { id: "1", name: "" },
@@ -105,6 +109,38 @@ export default function TimerPage() {
   const [savedSegmentNames, setSavedSegmentNames] = useState<string[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const inputRefs = useRef<Map<string, HTMLInputElement>>(new Map());
+
+  const saveWorkoutMutation = useMutation({
+    mutationFn: async (data: { workoutName: string; segments: CompletedSegment[]; totalTime: number }) => {
+      return apiRequest("/api/workouts", {
+        method: "POST",
+        body: JSON.stringify({
+          workout: {
+            name: data.workoutName,
+            totalTime: data.totalTime,
+          },
+          segments: data.segments.map((seg, index) => ({
+            name: seg.name,
+            duration: seg.duration,
+            order: index,
+          })),
+        }),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Workout Saved",
+        description: "Your workout has been saved successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to save workout. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -232,6 +268,11 @@ export default function TimerPage() {
   };
 
   const handleSummaryDone = () => {
+    // Save workout to database
+    if (summaryData) {
+      saveWorkoutMutation.mutate(summaryData);
+    }
+
     // Reset everything to start a new workout
     setShowSummary(false);
     setSummaryData(null);

@@ -12,6 +12,7 @@ export interface IStorage {
   createWorkout(userId: string, workout: InsertWorkout, segments: Omit<InsertSegment, "workoutId">[]): Promise<{ workout: Workout; segments: Segment[] }>;
   getWorkouts(userId: string): Promise<{ workout: Workout; segments: Segment[] }[]>;
   getWorkoutById(id: string, userId: string): Promise<{ workout: Workout; segments: Segment[] } | undefined>;
+  updateWorkout(id: string, userId: string, workout: Partial<InsertWorkout>, segments: Omit<InsertSegment, "workoutId">[]): Promise<{ workout: Workout; segments: Segment[] }>;
   deleteWorkout(id: string, userId: string): Promise<void>;
   
   // Segment operations
@@ -112,6 +113,48 @@ export class MemStorage implements IStorage {
         if (!workoutA || !workoutB) return 0;
         return workoutB.date.getTime() - workoutA.date.getTime();
       });
+  }
+
+  async updateWorkout(
+    id: string,
+    userId: string,
+    workoutUpdate: Partial<InsertWorkout>,
+    segmentInputs: Omit<InsertSegment, "workoutId">[]
+  ): Promise<{ workout: Workout; segments: Segment[] }> {
+    const workout = this.workouts.get(id);
+    if (!workout || workout.userId !== userId) {
+      throw new Error("Workout not found");
+    }
+
+    // Update workout
+    const updatedWorkout: Workout = {
+      ...workout,
+      ...workoutUpdate,
+    };
+    this.workouts.set(id, updatedWorkout);
+
+    // Delete old segments
+    Array.from(this.segments.entries()).forEach(([segId, seg]) => {
+      if (seg.workoutId === id) {
+        this.segments.delete(segId);
+      }
+    });
+
+    // Create new segments
+    const segments = segmentInputs.map((seg) => {
+      const segmentId = crypto.randomUUID();
+      const segment: Segment = {
+        id: segmentId,
+        workoutId: id,
+        name: seg.name,
+        duration: seg.duration,
+        order: seg.order,
+      };
+      this.segments.set(segmentId, segment);
+      return segment;
+    });
+
+    return { workout: updatedWorkout, segments };
   }
 
   async deleteWorkout(id: string, userId: string): Promise<void> {
@@ -222,6 +265,48 @@ export class DbStorage implements IStorage {
       .orderBy(desc(workouts.date));
 
     return result.map((r) => r.segments);
+  }
+
+  async updateWorkout(
+    id: string,
+    userId: string,
+    workoutUpdate: Partial<InsertWorkout>,
+    segmentInputs: Omit<InsertSegment, "workoutId">[]
+  ): Promise<{ workout: Workout; segments: Segment[] }> {
+    return await db.transaction(async (tx) => {
+      // Verify ownership and get current workout
+      const [existingWorkout] = await tx
+        .select()
+        .from(workouts)
+        .where(sql`${workouts.id} = ${id} AND ${workouts.userId} = ${userId}`);
+
+      if (!existingWorkout) {
+        throw new Error("Workout not found");
+      }
+
+      // Update workout
+      const [updatedWorkout] = await tx
+        .update(workouts)
+        .set(workoutUpdate)
+        .where(sql`${workouts.id} = ${id}`)
+        .returning();
+
+      // Delete old segments
+      await tx.delete(segments).where(eq(segments.workoutId, id));
+
+      // Insert new segments
+      const segmentsToInsert = segmentInputs.map((seg) => ({
+        ...seg,
+        workoutId: id,
+      }));
+
+      const updatedSegments = await tx
+        .insert(segments)
+        .values(segmentsToInsert)
+        .returning();
+
+      return { workout: updatedWorkout, segments: updatedSegments };
+    });
   }
 
   async deleteWorkout(id: string, userId: string): Promise<void> {

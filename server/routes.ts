@@ -83,6 +83,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update a workout for current user
+  app.patch("/api/workouts/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const bodySchema = z.object({
+        workout: insertWorkoutSchema.partial(),
+        segments: z.array(insertSegmentSchema.omit({ workoutId: true })),
+      });
+
+      const { workout, segments } = bodySchema.parse(req.body);
+      const result = await storage.updateWorkout(req.params.id, userId, workout, segments);
+      
+      res.json(result);
+    } catch (error: any) {
+      // Zod validation errors should return 400
+      if (error.name === 'ZodError') {
+        res.status(400).json({ message: error.message });
+        return;
+      }
+      // Not found errors should return 404
+      if (error.message === 'Workout not found') {
+        res.status(404).json({ message: error.message });
+        return;
+      }
+      // All other errors are server errors (500)
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Delete a workout for current user
   app.delete("/api/workouts/:id", isAuthenticated, async (req: any, res) => {
     try {

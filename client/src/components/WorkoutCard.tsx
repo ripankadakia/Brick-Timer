@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Trash2, Pencil } from "lucide-react";
 import { useState } from "react";
 import {
   AlertDialog,
@@ -26,9 +26,10 @@ interface WorkoutCardProps {
   totalTime: number;
   segments: WorkoutSegment[];
   onDelete?: () => void;
+  onEdit?: () => void;
 }
 
-export default function WorkoutCard({ id, name, date, totalTime, segments, onDelete }: WorkoutCardProps) {
+export default function WorkoutCard({ id, name, date, totalTime, segments, onDelete, onEdit }: WorkoutCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -113,21 +114,38 @@ export default function WorkoutCard({ id, name, date, totalTime, segments, onDel
           )}
         </div>
 
-        {expanded && onDelete && (
-          <div className="mt-4 pt-4 border-t border-border">
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowDeleteDialog(true);
-              }}
-              data-testid={`button-delete-${id}`}
-              className="w-full"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete Workout
-            </Button>
+        {expanded && (onEdit || onDelete) && (
+          <div className="mt-4 pt-4 border-t border-border flex gap-2">
+            {onEdit && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit();
+                }}
+                data-testid={`button-edit-${id}`}
+                className="flex-1"
+              >
+                <Pencil className="w-4 h-4 mr-2" />
+                Edit
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDeleteDialog(true);
+                }}
+                data-testid={`button-delete-${id}`}
+                className="flex-1"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete
+              </Button>
+            )}
           </div>
         )}
       </Card>

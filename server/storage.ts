@@ -26,6 +26,7 @@ export class MemStorage implements IStorage {
     const workoutId = crypto.randomUUID();
     const newWorkout: Workout = {
       id: workoutId,
+      name: workout.name,
       date: new Date(),
       totalTime: workout.totalTime,
     };

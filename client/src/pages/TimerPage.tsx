@@ -295,6 +295,7 @@ export default function TimerPage() {
   if (isActive) {
     return (
       <ActiveTimer
+        workoutName={workoutName}
         currentSegmentName={intervals[currentSegmentIndex].name}
         currentSegmentTime={currentSegmentTime}
         totalTime={totalTime}

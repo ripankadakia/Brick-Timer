@@ -4,6 +4,7 @@ import { Check, Pause, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface ActiveTimerProps {
+  workoutName: string;
   currentSegmentName: string;
   currentSegmentTime: number;
   totalTime: number;
@@ -14,6 +15,7 @@ interface ActiveTimerProps {
 }
 
 export default function ActiveTimer({
+  workoutName,
   currentSegmentName,
   currentSegmentTime,
   totalTime,
@@ -31,7 +33,7 @@ export default function ActiveTimer({
   return (
     <div className="flex flex-col h-full p-4 pb-24">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-lg font-semibold">Active Workout</h1>
+        <h1 className="text-lg font-semibold" data-testid="text-workout-name">{workoutName}</h1>
         <Badge variant="secondary" data-testid="text-total-time">
           Total: {formatTime(totalTime)}
         </Badge>

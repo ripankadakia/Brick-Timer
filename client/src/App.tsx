@@ -30,9 +30,20 @@ function Router() {
   );
 }
 
-function App() {
+function AppContent() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  return (
+    <div className="flex flex-col h-screen bg-background">
+      <main className="flex-1 overflow-hidden">
+        <Router />
+      </main>
+      {!isLoading && isAuthenticated && <BottomNav />}
+    </div>
+  );
+}
+
+function App() {
   useEffect(() => {
     document.documentElement.classList.add("dark");
   }, []);
@@ -40,12 +51,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <div className="flex flex-col h-screen bg-background">
-          <main className="flex-1 overflow-hidden">
-            <Router />
-          </main>
-          {!isLoading && isAuthenticated && <BottomNav />}
-        </div>
+        <AppContent />
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>

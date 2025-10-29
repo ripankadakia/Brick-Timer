@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a mobile-optimized interval timer application designed for tracking workout segments and analyzing fitness progress. Built as a full-stack web application, it allows users to create custom interval timers, track workout sessions in real-time, view workout history, and analyze performance metrics. The app follows Apple Human Interface Guidelines for clarity and precision in a utility-focused fitness context.
+This is a mobile-optimized interval timer application designed for tracking workout segments and analyzing fitness progress. Built as a full-stack web application with multi-user authentication, it allows users to create custom interval timers, track workout sessions in real-time, view workout history, and analyze performance metrics. Each user has their own private workout data. The app follows Apple Human Interface Guidelines for clarity and precision in a utility-focused fitness context.
 
 ## User Preferences
 
@@ -33,8 +33,9 @@ Preferred communication style: Simple, everyday language.
 - Mobile-first responsive design with viewport-fit=cover for iOS safe areas
 
 **Key Pages:**
-- **TimerPage:** Main interface for creating and running interval workouts with drag-to-reorder segments
-- **HistoryPage:** List view of completed workouts with expandable details
+- **LandingPage:** Public landing page for logged-out users with sign-in button
+- **TimerPage:** Main interface for creating and running interval workouts with drag-to-reorder segments (displays workout name during active workout)
+- **HistoryPage:** List view of completed workouts with expandable details and delete functionality
 - **AnalyticsPage:** Performance metrics and charts for specific segment types
 
 ### Backend Architecture
@@ -43,13 +44,13 @@ Preferred communication style: Simple, everyday language.
 
 **Language:** TypeScript with ESM modules
 
-**API Design:** RESTful API with routes prefixed by `/api` (routes implementation pending in `server/routes.ts`)
+**API Design:** RESTful API with routes prefixed by `/api`. All workout and segment routes are protected with authentication middleware.
 
-**Storage Layer:** Abstract storage interface (`IStorage`) with two implementations:
-- `MemStorage`: In-memory storage using Map data structures for development/testing
-- Database implementation planned using Drizzle ORM with PostgreSQL
+**Authentication:** Replit Auth (OpenID Connect) for multi-user support with Google, GitHub, X, Apple, and email/password login. Session-based authentication using PostgreSQL-backed sessions.
 
-**Session Management:** Configured to use connect-pg-simple for PostgreSQL-backed sessions (package dependency present)
+**Storage Layer:** Abstract storage interface (`IStorage`) implemented by `DbStorage` using Drizzle ORM with PostgreSQL. All workout operations filter by authenticated user ID.
+
+**Session Management:** PostgreSQL-backed sessions using connect-pg-simple with 7-day TTL
 
 **Development Features:**
 - Vite middleware integration for hot module replacement
@@ -60,8 +61,23 @@ Preferred communication style: Simple, everyday language.
 
 **Schema (Drizzle ORM):**
 
+**Users Table:**
+- `id`: Varchar primary key (user ID from Replit Auth)
+- `email`: Varchar field for user email (unique)
+- `firstName`: Varchar field for user's first name
+- `lastName`: Varchar field for user's last name
+- `profileImageUrl`: Varchar field for user's profile picture URL
+- `createdAt`: Timestamp (defaults to current time)
+- `updatedAt`: Timestamp (defaults to current time, updated on changes)
+
+**Sessions Table:**
+- `sid`: Varchar primary key (session ID)
+- `sess`: JSONB field for session data
+- `expire`: Timestamp for session expiration
+
 **Workouts Table:**
 - `id`: UUID primary key (auto-generated)
+- `userId`: Foreign key to users (cascade delete)
 - `name`: Text field for workout name
 - `date`: Timestamp (defaults to current time)
 - `totalTime`: Integer representing total workout duration in seconds
@@ -75,7 +91,11 @@ Preferred communication style: Simple, everyday language.
 
 **Validation:** Zod schemas generated from Drizzle table definitions for type-safe input validation.
 
-**Relationships:** One-to-many relationship between workouts and segments. Deleting a workout cascades to remove all associated segments.
+**Relationships:** 
+- Users have many workouts (one-to-many)
+- Workouts have many segments (one-to-many)
+- Deleting a user cascades to remove all workouts and segments
+- Deleting a workout cascades to remove all associated segments
 
 ### External Dependencies
 
@@ -83,6 +103,12 @@ Preferred communication style: Simple, everyday language.
 - PostgreSQL via @neondatabase/serverless
 - Drizzle ORM for type-safe database queries and migrations
 - WebSocket support configured via ws package for Neon serverless connections
+
+**Authentication:**
+- openid-client for OpenID Connect authentication
+- passport and openid-client/passport for authentication strategy
+- memoizee for caching OIDC configuration
+- connect-pg-simple for PostgreSQL session storage
 
 **UI Libraries:**
 - Radix UI primitives (30+ component primitives for accessibility)

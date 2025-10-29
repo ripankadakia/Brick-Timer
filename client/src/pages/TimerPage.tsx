@@ -279,7 +279,7 @@ export default function TimerPage() {
           value={workoutName}
           onChange={(e) => setWorkoutName(e.target.value)}
           placeholder="Workout name"
-          className="w-full px-0 py-0 text-2xl font-bold border-0 bg-transparent focus:outline-none focus:ring-0"
+          className="w-full px-3 py-2 text-2xl font-bold border border-border rounded-md bg-card focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 

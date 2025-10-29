@@ -90,7 +90,7 @@ function SortableIntervalInput({
 }
 
 export default function TimerPage() {
-  const [workoutName, setWorkoutName] = useState("");
+  const [workoutName, setWorkoutName] = useState("New Workout");
   const [intervals, setIntervals] = useState<Interval[]>([
     { id: "1", name: "" },
   ]);
@@ -223,7 +223,7 @@ export default function TimerPage() {
       }));
       
       setSummaryData({
-        workoutName: workoutName || "Workout",
+        workoutName: workoutName,
         segments: finalSegments,
         totalTime: totalTime
       });
@@ -235,7 +235,7 @@ export default function TimerPage() {
     // Reset everything to start a new workout
     setShowSummary(false);
     setSummaryData(null);
-    setWorkoutName("");
+    setWorkoutName("New Workout");
     setIntervals([{ id: Date.now().toString(), name: "" }]);
     setCurrentSegmentIndex(0);
     setCurrentSegmentTime(0);
@@ -272,16 +272,14 @@ export default function TimerPage() {
 
   return (
     <div className="flex flex-col h-full p-4 pb-24">
-      <h1 className="text-2xl font-bold mb-6">New Workout</h1>
-
-      <div className="mb-4">
+      <div className="mb-6">
         <input
           data-testid="input-workout-name"
           type="text"
           value={workoutName}
           onChange={(e) => setWorkoutName(e.target.value)}
-          placeholder="Workout name (e.g., Hyrox Brick 1)"
-          className="w-full px-3 py-2 text-base border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+          placeholder="Workout name"
+          className="w-full px-0 py-0 text-2xl font-bold border-0 bg-transparent focus:outline-none focus:ring-0"
         />
       </div>
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 interface ManualSegment {
   id: string;
   name: string;
-  duration: number;
+  duration: number; // in seconds
 }
 
 interface ManualWorkoutDialogProps {
@@ -39,21 +39,33 @@ export default function ManualWorkoutDialog({
   editWorkout,
 }: ManualWorkoutDialogProps) {
   const { toast } = useToast();
-  const [workoutName, setWorkoutName] = useState(editWorkout?.name || "");
-  const [workoutDate, setWorkoutDate] = useState(
-    editWorkout
-      ? new Date(editWorkout.date).toISOString().slice(0, 16)
-      : new Date().toISOString().slice(0, 16)
-  );
-  const [segments, setSegments] = useState<ManualSegment[]>(
-    editWorkout
-      ? editWorkout.segments.map((seg, idx) => ({
-          id: `${idx}`,
-          name: seg.name,
-          duration: Math.round(seg.duration / 60),
-        }))
-      : [{ id: "1", name: "", duration: 0 }]
-  );
+  const [workoutName, setWorkoutName] = useState("");
+  const [workoutDate, setWorkoutDate] = useState(new Date().toISOString().slice(0, 16));
+  const [segments, setSegments] = useState<ManualSegment[]>([
+    { id: "1", name: "", duration: 0 },
+  ]);
+
+  // Sync state when editWorkout changes or dialog opens
+  useEffect(() => {
+    if (open) {
+      if (editWorkout) {
+        setWorkoutName(editWorkout.name);
+        setWorkoutDate(new Date(editWorkout.date).toISOString().slice(0, 16));
+        setSegments(
+          editWorkout.segments.map((seg, idx) => ({
+            id: `${idx}`,
+            name: seg.name,
+            duration: seg.duration, // Keep in seconds
+          }))
+        );
+      } else {
+        // Reset to default for new workout
+        setWorkoutName("");
+        setWorkoutDate(new Date().toISOString().slice(0, 16));
+        setSegments([{ id: "1", name: "", duration: 0 }]);
+      }
+    }
+  }, [open, editWorkout]);
 
   const createWorkoutMutation = useMutation({
     mutationFn: async (data: {
@@ -62,7 +74,7 @@ export default function ManualWorkoutDialog({
       segments: ManualSegment[];
     }) => {
       const totalTime = data.segments.reduce(
-        (sum, seg) => sum + seg.duration * 60,
+        (sum, seg) => sum + seg.duration,
         0
       );
       return apiRequest("POST", "/api/workouts", {
@@ -73,7 +85,7 @@ export default function ManualWorkoutDialog({
         },
         segments: data.segments.map((seg, index) => ({
           name: seg.name,
-          duration: seg.duration * 60,
+          duration: seg.duration,
           order: index,
         })),
       });
@@ -85,7 +97,6 @@ export default function ManualWorkoutDialog({
         description: "Your workout has been added successfully.",
       });
       onOpenChange(false);
-      resetForm();
     },
     onError: () => {
       toast({
@@ -104,7 +115,7 @@ export default function ManualWorkoutDialog({
       segments: ManualSegment[];
     }) => {
       const totalTime = data.segments.reduce(
-        (sum, seg) => sum + seg.duration * 60,
+        (sum, seg) => sum + seg.duration,
         0
       );
       return apiRequest("PATCH", `/api/workouts/${data.id}`, {
@@ -115,7 +126,7 @@ export default function ManualWorkoutDialog({
         },
         segments: data.segments.map((seg, index) => ({
           name: seg.name,
-          duration: seg.duration * 60,
+          duration: seg.duration,
           order: index,
         })),
       });
@@ -127,7 +138,6 @@ export default function ManualWorkoutDialog({
         description: "Your workout has been updated successfully.",
       });
       onOpenChange(false);
-      resetForm();
     },
     onError: () => {
       toast({
@@ -138,13 +148,6 @@ export default function ManualWorkoutDialog({
     },
   });
 
-  const resetForm = () => {
-    if (!editWorkout) {
-      setWorkoutName("");
-      setWorkoutDate(new Date().toISOString().slice(0, 16));
-      setSegments([{ id: "1", name: "", duration: 0 }]);
-    }
-  };
 
   const addSegment = () => {
     setSegments([
@@ -163,7 +166,9 @@ export default function ManualWorkoutDialog({
     setSegments(segments.map((seg) => (seg.id === id ? { ...seg, name } : seg)));
   };
 
-  const updateSegmentDuration = (id: string, duration: number) => {
+  const updateSegmentDuration = (id: string, minutes: number) => {
+    // Convert minutes to seconds and round to whole seconds to avoid floating point precision issues
+    const duration = Math.round(minutes * 60);
     setSegments(
       segments.map((seg) => (seg.id === id ? { ...seg, duration } : seg))
     );
@@ -274,13 +279,13 @@ export default function ManualWorkoutDialog({
                     data-testid={`input-manual-segment-duration-${index}`}
                     type="number"
                     min="0"
-                    step="1"
+                    step="0.01"
                     placeholder="Min"
-                    value={segment.duration || ""}
+                    value={segment.duration > 0 ? segment.duration / 60 : ""}
                     onChange={(e) =>
                       updateSegmentDuration(
                         segment.id,
-                        parseInt(e.target.value) || 0
+                        parseFloat(e.target.value) || 0
                       )
                     }
                   />
@@ -316,10 +321,7 @@ export default function ManualWorkoutDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => {
-                onOpenChange(false);
-                resetForm();
-              }}
+              onClick={() => onOpenChange(false)}
               disabled={isPending}
               data-testid="button-cancel-manual-workout"
             >

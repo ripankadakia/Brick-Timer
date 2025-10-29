@@ -5,6 +5,7 @@ export default function HistoryPage() {
   const mockWorkouts = [
     {
       id: "1",
+      name: "Hyrox Brick 1",
       date: new Date(),
       totalTime: 720,
       segments: [
@@ -16,6 +17,7 @@ export default function HistoryPage() {
     },
     {
       id: "2",
+      name: "Morning Circuit",
       date: new Date(Date.now() - 86400000),
       totalTime: 650,
       segments: [
@@ -27,6 +29,7 @@ export default function HistoryPage() {
     },
     {
       id: "3",
+      name: "Evening HIIT",
       date: new Date(Date.now() - 86400000 * 2),
       totalTime: 780,
       segments: [
@@ -60,6 +63,7 @@ export default function HistoryPage() {
           <WorkoutCard
             key={workout.id}
             id={workout.id}
+            name={workout.name}
             date={workout.date}
             totalTime={workout.totalTime}
             segments={workout.segments}

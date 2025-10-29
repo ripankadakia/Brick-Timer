@@ -10,12 +10,13 @@ interface WorkoutSegment {
 
 interface WorkoutCardProps {
   id: string;
+  name?: string;
   date: Date;
   totalTime: number;
   segments: WorkoutSegment[];
 }
 
-export default function WorkoutCard({ id, date, totalTime, segments }: WorkoutCardProps) {
+export default function WorkoutCard({ id, name, date, totalTime, segments }: WorkoutCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   const formatTime = (seconds: number) => {
@@ -50,10 +51,15 @@ export default function WorkoutCard({ id, date, totalTime, segments }: WorkoutCa
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-xl font-bold" data-testid={`text-total-time-${id}`}>
-              {formatTime(totalTime)}
+          {name && (
+            <h3 className="text-lg font-bold mb-1" data-testid={`text-workout-name-${id}`}>
+              {name}
             </h3>
+          )}
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-base font-semibold tabular-nums font-mono" data-testid={`text-total-time-${id}`}>
+              {formatTime(totalTime)}
+            </span>
             <Badge variant="secondary" data-testid={`text-segment-count-${id}`}>
               {segments.length} segments
             </Badge>

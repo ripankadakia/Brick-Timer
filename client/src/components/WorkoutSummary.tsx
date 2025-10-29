@@ -8,12 +8,14 @@ interface CompletedSegment {
 }
 
 interface WorkoutSummaryProps {
+  workoutName: string;
   segments: CompletedSegment[];
   totalTime: number;
   onDone: () => void;
 }
 
 export default function WorkoutSummary({
+  workoutName,
   segments,
   totalTime,
   onDone,
@@ -28,8 +30,8 @@ export default function WorkoutSummary({
     <div className="flex flex-col h-full p-4 pb-24">
       <div className="flex flex-col items-center justify-center py-8">
         <CheckCircle2 className="w-16 h-16 text-primary mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Workout Complete!</h1>
-        <p className="text-muted-foreground">Great job finishing your workout</p>
+        <h1 className="text-2xl font-bold mb-2">{workoutName}</h1>
+        <p className="text-muted-foreground">Workout Complete!</p>
       </div>
 
       <Card className="p-6 mb-6">

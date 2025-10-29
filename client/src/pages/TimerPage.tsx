@@ -90,6 +90,7 @@ function SortableIntervalInput({
 }
 
 export default function TimerPage() {
+  const [workoutName, setWorkoutName] = useState("");
   const [intervals, setIntervals] = useState<Interval[]>([
     { id: "1", name: "" },
   ]);
@@ -100,7 +101,7 @@ export default function TimerPage() {
   const [totalTime, setTotalTime] = useState(0);
   const [completedSegments, setCompletedSegments] = useState<ActiveSegment[]>([]);
   const [showSummary, setShowSummary] = useState(false);
-  const [summaryData, setSummaryData] = useState<{ segments: CompletedSegment[]; totalTime: number } | null>(null);
+  const [summaryData, setSummaryData] = useState<{ workoutName: string; segments: CompletedSegment[]; totalTime: number } | null>(null);
   const [savedSegmentNames, setSavedSegmentNames] = useState<string[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const inputRefs = useRef<Map<string, HTMLInputElement>>(new Map());
@@ -222,6 +223,7 @@ export default function TimerPage() {
       }));
       
       setSummaryData({
+        workoutName: workoutName || "Workout",
         segments: finalSegments,
         totalTime: totalTime
       });
@@ -233,6 +235,7 @@ export default function TimerPage() {
     // Reset everything to start a new workout
     setShowSummary(false);
     setSummaryData(null);
+    setWorkoutName("");
     setIntervals([{ id: Date.now().toString(), name: "" }]);
     setCurrentSegmentIndex(0);
     setCurrentSegmentTime(0);
@@ -243,6 +246,7 @@ export default function TimerPage() {
   if (showSummary && summaryData) {
     return (
       <WorkoutSummary
+        workoutName={summaryData.workoutName}
         segments={summaryData.segments}
         totalTime={summaryData.totalTime}
         onDone={handleSummaryDone}
@@ -269,6 +273,17 @@ export default function TimerPage() {
   return (
     <div className="flex flex-col h-full p-4 pb-24">
       <h1 className="text-2xl font-bold mb-6">New Workout</h1>
+
+      <div className="mb-4">
+        <input
+          data-testid="input-workout-name"
+          type="text"
+          value={workoutName}
+          onChange={(e) => setWorkoutName(e.target.value)}
+          placeholder="Workout name (e.g., Hyrox Brick 1)"
+          className="w-full px-3 py-2 text-base border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+      </div>
 
       <DndContext
         sensors={sensors}

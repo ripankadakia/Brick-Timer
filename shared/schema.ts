@@ -5,6 +5,7 @@ import { z } from "zod";
 
 export const workouts = pgTable("workouts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
   date: timestamp("date").notNull().defaultNow(),
   totalTime: integer("total_time").notNull(),
 });

@@ -72,6 +72,14 @@ export default function IntervalInput({
       } else if (onEnter) {
         onEnter();
       }
+    } else if (e.key === "Tab") {
+      if (showSuggestions && filteredSuggestions.length > 0) {
+        e.preventDefault();
+        const indexToSelect = selectedIndex >= 0 ? selectedIndex : 0;
+        onNameChange(filteredSuggestions[indexToSelect]);
+        setShowSuggestions(false);
+        setSelectedIndex(-1);
+      }
     } else if (e.key === "ArrowDown" && showSuggestions) {
       e.preventDefault();
       setSelectedIndex((prev) =>
@@ -138,8 +146,10 @@ export default function IntervalInput({
           {filteredSuggestions.map((suggestion, index) => (
             <div
               key={suggestion}
-              className={`flex items-center justify-between px-4 py-2 cursor-pointer hover-elevate ${
-                index === selectedIndex ? "bg-accent" : ""
+              className={`flex items-center justify-between px-4 py-2 cursor-pointer transition-colors ${
+                index === selectedIndex 
+                  ? "bg-accent text-accent-foreground" 
+                  : "hover-elevate"
               }`}
               onClick={() => handleSuggestionClick(suggestion)}
               data-testid={`suggestion-${id}-${index}`}

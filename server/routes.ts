@@ -18,7 +18,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(result);
     } catch (error: any) {
-      res.status(400).json({ message: error.message });
+      // Zod validation errors should return 400
+      if (error.name === 'ZodError') {
+        res.status(400).json({ message: error.message });
+        return;
+      }
+      // All other errors are server errors (500)
+      res.status(500).json({ message: error.message });
     }
   });
 

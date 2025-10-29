@@ -1,4 +1,6 @@
-import { type Workout, type InsertWorkout, type Segment, type InsertSegment } from "@shared/schema";
+import { type Workout, type InsertWorkout, type Segment, type InsertSegment, workouts, segments } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Workout operations
@@ -80,4 +82,76 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DbStorage implements IStorage {
+  async createWorkout(
+    workout: InsertWorkout,
+    segmentInputs: Omit<InsertSegment, "workoutId">[]
+  ): Promise<{ workout: Workout; segments: Segment[] }> {
+    return await db.transaction(async (tx) => {
+      const [newWorkout] = await tx.insert(workouts).values(workout).returning();
+
+      const segmentsToInsert = segmentInputs.map((seg) => ({
+        ...seg,
+        workoutId: newWorkout.id,
+      }));
+
+      const createdSegments = await tx
+        .insert(segments)
+        .values(segmentsToInsert)
+        .returning();
+
+      return { workout: newWorkout, segments: createdSegments };
+    });
+  }
+
+  async getWorkouts(): Promise<{ workout: Workout; segments: Segment[] }[]> {
+    const allWorkouts = await db
+      .select()
+      .from(workouts)
+      .orderBy(desc(workouts.date));
+
+    const result = await Promise.all(
+      allWorkouts.map(async (workout) => {
+        const workoutSegments = await db
+          .select()
+          .from(segments)
+          .where(eq(segments.workoutId, workout.id))
+          .orderBy(segments.order);
+
+        return { workout, segments: workoutSegments };
+      })
+    );
+
+    return result;
+  }
+
+  async getWorkoutById(id: string): Promise<{ workout: Workout; segments: Segment[] } | undefined> {
+    const [workout] = await db
+      .select()
+      .from(workouts)
+      .where(eq(workouts.id, id));
+
+    if (!workout) return undefined;
+
+    const workoutSegments = await db
+      .select()
+      .from(segments)
+      .where(eq(segments.workoutId, id))
+      .orderBy(segments.order);
+
+    return { workout, segments: workoutSegments };
+  }
+
+  async getSegmentsByName(name: string): Promise<Segment[]> {
+    const result = await db
+      .select()
+      .from(segments)
+      .where(sql`lower(${segments.name}) = lower(${name})`)
+      .innerJoin(workouts, eq(segments.workoutId, workouts.id))
+      .orderBy(desc(workouts.date));
+
+    return result.map((r) => r.segments);
+  }
+}
+
+export const storage = new DbStorage();

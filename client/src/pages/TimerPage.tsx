@@ -112,19 +112,16 @@ export default function TimerPage() {
 
   const saveWorkoutMutation = useMutation({
     mutationFn: async (data: { workoutName: string; segments: CompletedSegment[]; totalTime: number }) => {
-      return apiRequest("/api/workouts", {
-        method: "POST",
-        body: JSON.stringify({
-          workout: {
-            name: data.workoutName,
-            totalTime: data.totalTime,
-          },
-          segments: data.segments.map((seg, index) => ({
-            name: seg.name,
-            duration: seg.duration,
-            order: index,
-          })),
-        }),
+      return apiRequest("POST", "/api/workouts", {
+        workout: {
+          name: data.workoutName,
+          totalTime: data.totalTime,
+        },
+        segments: data.segments.map((seg, index) => ({
+          name: seg.name,
+          duration: seg.duration,
+          order: index,
+        })),
       });
     },
     onSuccess: () => {

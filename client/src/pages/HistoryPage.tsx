@@ -1,47 +1,23 @@
 import WorkoutCard from "@/components/WorkoutCard";
+import { useQuery } from "@tanstack/react-query";
+import type { Workout, Segment } from "@shared/schema";
 
 export default function HistoryPage() {
-  //todo: remove mock functionality
-  const mockWorkouts = [
-    {
-      id: "1",
-      name: "Hyrox Brick 1",
-      date: new Date(),
-      totalTime: 720,
-      segments: [
-        { name: "Run", duration: 180 },
-        { name: "Bike", duration: 240 },
-        { name: "Row", duration: 150 },
-        { name: "Run", duration: 150 },
-      ],
-    },
-    {
-      id: "2",
-      name: "Morning Circuit",
-      date: new Date(Date.now() - 86400000),
-      totalTime: 650,
-      segments: [
-        { name: "Run", duration: 200 },
-        { name: "Bike", duration: 220 },
-        { name: "Row", duration: 130 },
-        { name: "Run", duration: 100 },
-      ],
-    },
-    {
-      id: "3",
-      name: "Evening HIIT",
-      date: new Date(Date.now() - 86400000 * 2),
-      totalTime: 780,
-      segments: [
-        { name: "Run", duration: 190 },
-        { name: "Bike", duration: 250 },
-        { name: "Row", duration: 170 },
-        { name: "Run", duration: 170 },
-      ],
-    },
-  ];
+  const { data: workouts, isLoading } = useQuery<{ workout: Workout; segments: Segment[] }[]>({
+    queryKey: ["/api/workouts"],
+  });
 
-  if (mockWorkouts.length === 0) {
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-4 pb-24">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading workouts...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!workouts || workouts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-4 pb-24">
         <div className="text-center">
@@ -59,14 +35,17 @@ export default function HistoryPage() {
       <h1 className="text-2xl font-bold mb-6">Workout History</h1>
 
       <div className="flex-1 overflow-y-auto space-y-3">
-        {mockWorkouts.map((workout) => (
+        {workouts.map(({ workout, segments }) => (
           <WorkoutCard
             key={workout.id}
             id={workout.id}
             name={workout.name}
-            date={workout.date}
+            date={new Date(workout.date)}
             totalTime={workout.totalTime}
-            segments={workout.segments}
+            segments={segments.map(seg => ({
+              name: seg.name,
+              duration: seg.duration,
+            }))}
           />
         ))}
       </div>

@@ -1,34 +1,61 @@
-import { type Workout, type InsertWorkout, type Segment, type InsertSegment, workouts, segments } from "@shared/schema";
+import { type Workout, type InsertWorkout, type Segment, type InsertSegment, type User, type UpsertUser, workouts, segments, users } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
 
+// Reference: blueprint:javascript_log_in_with_replit
 export interface IStorage {
+  // User operations (required for Replit Auth)
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+  
   // Workout operations
-  createWorkout(workout: InsertWorkout, segments: Omit<InsertSegment, "workoutId">[]): Promise<{ workout: Workout; segments: Segment[] }>;
-  getWorkouts(): Promise<{ workout: Workout; segments: Segment[] }[]>;
-  getWorkoutById(id: string): Promise<{ workout: Workout; segments: Segment[] } | undefined>;
-  deleteWorkout(id: string): Promise<void>;
+  createWorkout(userId: string, workout: InsertWorkout, segments: Omit<InsertSegment, "workoutId">[]): Promise<{ workout: Workout; segments: Segment[] }>;
+  getWorkouts(userId: string): Promise<{ workout: Workout; segments: Segment[] }[]>;
+  getWorkoutById(id: string, userId: string): Promise<{ workout: Workout; segments: Segment[] } | undefined>;
+  deleteWorkout(id: string, userId: string): Promise<void>;
   
   // Segment operations
-  getSegmentsByName(name: string): Promise<Segment[]>;
+  getSegmentsByName(name: string, userId: string): Promise<Segment[]>;
 }
 
 export class MemStorage implements IStorage {
+  private users: Map<string, User>;
   private workouts: Map<string, Workout>;
   private segments: Map<string, Segment>;
 
   constructor() {
+    this.users = new Map();
     this.workouts = new Map();
     this.segments = new Map();
   }
 
+  async getUser(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const user: User = {
+      id: userData.id!,
+      email: userData.email ?? null,
+      firstName: userData.firstName ?? null,
+      lastName: userData.lastName ?? null,
+      profileImageUrl: userData.profileImageUrl ?? null,
+      createdAt: this.users.get(userData.id!)?.createdAt ?? new Date(),
+      updatedAt: new Date(),
+    };
+    this.users.set(user.id, user);
+    return user;
+  }
+
   async createWorkout(
+    userId: string,
     workout: InsertWorkout,
     segmentInputs: Omit<InsertSegment, "workoutId">[]
   ): Promise<{ workout: Workout; segments: Segment[] }> {
     const workoutId = crypto.randomUUID();
     const newWorkout: Workout = {
       id: workoutId,
+      userId,
       name: workout.name,
       date: new Date(),
       totalTime: workout.totalTime,
@@ -51,18 +78,20 @@ export class MemStorage implements IStorage {
     return { workout: newWorkout, segments };
   }
 
-  async getWorkouts(): Promise<{ workout: Workout; segments: Segment[] }[]> {
-    return Array.from(this.workouts.values()).map((workout) => ({
-      workout,
-      segments: Array.from(this.segments.values())
-        .filter((seg) => seg.workoutId === workout.id)
-        .sort((a, b) => a.order - b.order),
-    }));
+  async getWorkouts(userId: string): Promise<{ workout: Workout; segments: Segment[] }[]> {
+    return Array.from(this.workouts.values())
+      .filter((workout) => workout.userId === userId)
+      .map((workout) => ({
+        workout,
+        segments: Array.from(this.segments.values())
+          .filter((seg) => seg.workoutId === workout.id)
+          .sort((a, b) => a.order - b.order),
+      }));
   }
 
-  async getWorkoutById(id: string): Promise<{ workout: Workout; segments: Segment[] } | undefined> {
+  async getWorkoutById(id: string, userId: string): Promise<{ workout: Workout; segments: Segment[] } | undefined> {
     const workout = this.workouts.get(id);
-    if (!workout) return undefined;
+    if (!workout || workout.userId !== userId) return undefined;
 
     const segments = Array.from(this.segments.values())
       .filter((seg) => seg.workoutId === id)
@@ -71,9 +100,12 @@ export class MemStorage implements IStorage {
     return { workout, segments };
   }
 
-  async getSegmentsByName(name: string): Promise<Segment[]> {
+  async getSegmentsByName(name: string, userId: string): Promise<Segment[]> {
     return Array.from(this.segments.values())
-      .filter((seg) => seg.name.toLowerCase() === name.toLowerCase())
+      .filter((seg) => {
+        const workout = this.workouts.get(seg.workoutId);
+        return workout && workout.userId === userId && seg.name.toLowerCase() === name.toLowerCase();
+      })
       .sort((a, b) => {
         const workoutA = this.workouts.get(a.workoutId);
         const workoutB = this.workouts.get(b.workoutId);
@@ -82,24 +114,51 @@ export class MemStorage implements IStorage {
       });
   }
 
-  async deleteWorkout(id: string): Promise<void> {
-    this.workouts.delete(id);
-    // Delete all segments for this workout
-    Array.from(this.segments.entries()).forEach(([segId, seg]) => {
-      if (seg.workoutId === id) {
-        this.segments.delete(segId);
-      }
-    });
+  async deleteWorkout(id: string, userId: string): Promise<void> {
+    const workout = this.workouts.get(id);
+    if (workout && workout.userId === userId) {
+      this.workouts.delete(id);
+      // Delete all segments for this workout
+      Array.from(this.segments.entries()).forEach(([segId, seg]) => {
+        if (seg.workoutId === id) {
+          this.segments.delete(segId);
+        }
+      });
+    }
   }
 }
 
 export class DbStorage implements IStorage {
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
   async createWorkout(
+    userId: string,
     workout: InsertWorkout,
     segmentInputs: Omit<InsertSegment, "workoutId">[]
   ): Promise<{ workout: Workout; segments: Segment[] }> {
     return await db.transaction(async (tx) => {
-      const [newWorkout] = await tx.insert(workouts).values(workout).returning();
+      const [newWorkout] = await tx.insert(workouts).values({
+        ...workout,
+        userId,
+      }).returning();
 
       const segmentsToInsert = segmentInputs.map((seg) => ({
         ...seg,
@@ -115,10 +174,11 @@ export class DbStorage implements IStorage {
     });
   }
 
-  async getWorkouts(): Promise<{ workout: Workout; segments: Segment[] }[]> {
+  async getWorkouts(userId: string): Promise<{ workout: Workout; segments: Segment[] }[]> {
     const allWorkouts = await db
       .select()
       .from(workouts)
+      .where(eq(workouts.userId, userId))
       .orderBy(desc(workouts.date));
 
     const result = await Promise.all(
@@ -136,11 +196,11 @@ export class DbStorage implements IStorage {
     return result;
   }
 
-  async getWorkoutById(id: string): Promise<{ workout: Workout; segments: Segment[] } | undefined> {
+  async getWorkoutById(id: string, userId: string): Promise<{ workout: Workout; segments: Segment[] } | undefined> {
     const [workout] = await db
       .select()
       .from(workouts)
-      .where(eq(workouts.id, id));
+      .where(sql`${workouts.id} = ${id} AND ${workouts.userId} = ${userId}`);
 
     if (!workout) return undefined;
 
@@ -153,20 +213,20 @@ export class DbStorage implements IStorage {
     return { workout, segments: workoutSegments };
   }
 
-  async getSegmentsByName(name: string): Promise<Segment[]> {
+  async getSegmentsByName(name: string, userId: string): Promise<Segment[]> {
     const result = await db
       .select()
       .from(segments)
       .where(sql`lower(${segments.name}) = lower(${name})`)
-      .innerJoin(workouts, eq(segments.workoutId, workouts.id))
+      .innerJoin(workouts, sql`${segments.workoutId} = ${workouts.id} AND ${workouts.userId} = ${userId}`)
       .orderBy(desc(workouts.date));
 
     return result.map((r) => r.segments);
   }
 
-  async deleteWorkout(id: string): Promise<void> {
+  async deleteWorkout(id: string, userId: string): Promise<void> {
     // Cascade delete will automatically remove segments
-    await db.delete(workouts).where(eq(workouts.id, id));
+    await db.delete(workouts).where(sql`${workouts.id} = ${id} AND ${workouts.userId} = ${userId}`);
   }
 }
 

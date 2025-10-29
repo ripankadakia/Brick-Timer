@@ -8,18 +8,31 @@ import BottomNav from "@/components/BottomNav";
 import TimerPage from "@/pages/TimerPage";
 import HistoryPage from "@/pages/HistoryPage";
 import AnalyticsPage from "@/pages/AnalyticsPage";
+import LandingPage from "@/pages/LandingPage";
+import { useAuth } from "@/hooks/useAuth";
 
+// Reference: blueprint:javascript_log_in_with_replit
 function Router() {
+  const { isAuthenticated, isLoading } = useAuth();
+
   return (
     <Switch>
-      <Route path="/" component={TimerPage} />
-      <Route path="/history" component={HistoryPage} />
-      <Route path="/analytics" component={AnalyticsPage} />
+      {isLoading || !isAuthenticated ? (
+        <Route path="/" component={LandingPage} />
+      ) : (
+        <>
+          <Route path="/" component={TimerPage} />
+          <Route path="/history" component={HistoryPage} />
+          <Route path="/analytics" component={AnalyticsPage} />
+        </>
+      )}
     </Switch>
   );
 }
 
 function App() {
+  const { isAuthenticated, isLoading } = useAuth();
+
   useEffect(() => {
     document.documentElement.classList.add("dark");
   }, []);
@@ -31,7 +44,7 @@ function App() {
           <main className="flex-1 overflow-hidden">
             <Router />
           </main>
-          <BottomNav />
+          {!isLoading && isAuthenticated && <BottomNav />}
         </div>
         <Toaster />
       </TooltipProvider>

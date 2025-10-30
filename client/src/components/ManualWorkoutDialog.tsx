@@ -166,11 +166,29 @@ export default function ManualWorkoutDialog({
     setSegments(segments.map((seg) => (seg.id === id ? { ...seg, name } : seg)));
   };
 
-  const updateSegmentDuration = (id: string, minutes: number) => {
-    // Convert minutes to seconds and round to whole seconds to avoid floating point precision issues
-    const duration = Math.round(minutes * 60);
+  const updateSegmentMinutes = (id: string, minutes: number) => {
     setSegments(
-      segments.map((seg) => (seg.id === id ? { ...seg, duration } : seg))
+      segments.map((seg) => {
+        if (seg.id === id) {
+          const currentSeconds = seg.duration % 60;
+          const duration = minutes * 60 + currentSeconds;
+          return { ...seg, duration };
+        }
+        return seg;
+      })
+    );
+  };
+
+  const updateSegmentSeconds = (id: string, seconds: number) => {
+    setSegments(
+      segments.map((seg) => {
+        if (seg.id === id) {
+          const currentMinutes = Math.floor(seg.duration / 60);
+          const duration = currentMinutes * 60 + seconds;
+          return { ...seg, duration };
+        }
+        return seg;
+      })
     );
   };
 
@@ -274,21 +292,38 @@ export default function ManualWorkoutDialog({
                     }
                   />
                 </div>
-                <div className="w-24 space-y-2">
-                  <Input
-                    data-testid={`input-manual-segment-duration-${index}`}
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="Min"
-                    value={segment.duration > 0 ? segment.duration / 60 : ""}
-                    onChange={(e) =>
-                      updateSegmentDuration(
-                        segment.id,
-                        parseFloat(e.target.value) || 0
-                      )
-                    }
-                  />
+                <div className="flex gap-1 items-center">
+                  <div className="w-16 space-y-2">
+                    <Input
+                      data-testid={`input-manual-segment-minutes-${index}`}
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="Min"
+                      value={segment.duration === 0 ? "" : Math.floor(segment.duration / 60)}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value);
+                        updateSegmentMinutes(segment.id, isNaN(value) ? 0 : value);
+                      }}
+                    />
+                  </div>
+                  <span className="text-muted-foreground">:</span>
+                  <div className="w-16 space-y-2">
+                    <Input
+                      data-testid={`input-manual-segment-seconds-${index}`}
+                      type="number"
+                      min="0"
+                      max="59"
+                      step="1"
+                      placeholder="Sec"
+                      value={segment.duration === 0 ? "" : segment.duration % 60}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value);
+                        const clampedValue = isNaN(value) ? 0 : Math.min(Math.max(value, 0), 59);
+                        updateSegmentSeconds(segment.id, clampedValue);
+                      }}
+                    />
+                  </div>
                 </div>
                 {segments.length > 1 && (
                   <Button

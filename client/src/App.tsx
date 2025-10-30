@@ -8,6 +8,7 @@ import BottomNav from "@/components/BottomNav";
 import TimerPage from "@/pages/TimerPage";
 import HistoryPage from "@/pages/HistoryPage";
 import AnalyticsPage from "@/pages/AnalyticsPage";
+import ProfilePage from "@/pages/ProfilePage";
 import LandingPage from "@/pages/LandingPage";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -24,6 +25,7 @@ function Router() {
           <Route path="/" component={TimerPage} />
           <Route path="/history" component={HistoryPage} />
           <Route path="/analytics" component={AnalyticsPage} />
+          <Route path="/profile" component={ProfilePage} />
         </>
       )}
     </Switch>

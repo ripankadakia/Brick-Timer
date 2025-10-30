@@ -1,4 +1,4 @@
-import { Timer, History, TrendingUp } from "lucide-react";
+import { Timer, History, TrendingUp, User } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
 export default function BottomNav() {
@@ -8,6 +8,7 @@ export default function BottomNav() {
     { path: "/", icon: Timer, label: "Timer" },
     { path: "/history", icon: History, label: "History" },
     { path: "/analytics", icon: TrendingUp, label: "Analytics" },
+    { path: "/profile", icon: User, label: "Profile" },
   ];
 
   return (

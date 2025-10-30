@@ -4,7 +4,7 @@ import { Timer, BarChart3, History } from "lucide-react";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6">
+    <div className="h-screen overflow-y-auto flex flex-col items-center justify-start sm:justify-center p-6 py-12">
       <div className="max-w-2xl w-full space-y-8">
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold tracking-tight">Interval Timer</h1>

@@ -305,6 +305,7 @@ export default function ManualWorkoutDialog({
                         const value = parseInt(e.target.value);
                         updateSegmentMinutes(segment.id, isNaN(value) ? 0 : value);
                       }}
+                      onFocus={(e) => e.target.select()}
                     />
                   </div>
                   <span className="text-muted-foreground">:</span>
@@ -322,6 +323,7 @@ export default function ManualWorkoutDialog({
                         const clampedValue = isNaN(value) ? 0 : Math.min(Math.max(value, 0), 59);
                         updateSegmentSeconds(segment.id, clampedValue);
                       }}
+                      onFocus={(e) => e.target.select()}
                     />
                   </div>
                 </div>

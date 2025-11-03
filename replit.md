@@ -35,7 +35,7 @@ Preferred communication style: Simple, everyday language.
 
 **Key Pages:**
 - **LandingPage:** Public landing page for logged-out users with sign-in button
-- **TimerPage:** Main interface for creating and running interval workouts with drag-to-reorder segments. Includes datalist autocomplete for workout names showing existing templates. When a template is selected, segments auto-populate. Workouts are automatically saved as templates when Start is pressed. Active workouts run in background when navigating to other pages.
+- **TimerPage:** Main interface for creating and running interval workouts with drag-to-reorder segments. Includes datalist autocomplete for workout names showing existing templates. When a template is selected, segments auto-populate. Workouts are automatically saved as templates when Start is pressed. Active workouts run in background when navigating to other pages. When the last segment is completed, the workout automatically saves to the database and returns to setup view without showing a summary screen.
 - **HistoryPage:** List view of completed workouts with expandable details and delete functionality
 - **AnalyticsPage:** Performance metrics and charts for specific segment types
 
@@ -47,6 +47,14 @@ Preferred communication style: Simple, everyday language.
 - Indicator displays current segment name, elapsed time, and running/paused status
 - Click indicator to return to Timer page and see full ActiveTimer view
 - Green pulsing dot indicates running workout, yellow dot indicates paused
+
+**Auto-Save Workout Completion:**
+- When user completes the last segment, completeSegment() returns CompletedWorkout data
+- TimerPage automatically saves the workout via POST /api/workouts
+- Workout state immediately resets (isActive=false)
+- User returns to setup view without manual interaction
+- Toast notification confirms "Workout Saved"
+- No summary screen or "Done" button - prevents data loss from forgotten clicks
 
 **Workout Template System:**
 - Templates are automatically saved when users start a workout

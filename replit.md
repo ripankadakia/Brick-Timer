@@ -18,7 +18,8 @@ Preferred communication style: Simple, everyday language.
 
 **State Management:** 
 - @tanstack/react-query for server state management and data fetching
-- Local React state (useState, useEffect) for UI state and timer logic
+- React Context (WorkoutContext) for global workout state across pages
+- Local React state (useState, useEffect) for UI state
 - localStorage for persisting user preferences (segment name suggestions)
 
 **UI Component Library:** shadcn/ui components built on Radix UI primitives with Tailwind CSS for styling. The design system follows the "new-york" style variant with custom color tokens and spacing based on Apple HIG principles.
@@ -34,9 +35,18 @@ Preferred communication style: Simple, everyday language.
 
 **Key Pages:**
 - **LandingPage:** Public landing page for logged-out users with sign-in button
-- **TimerPage:** Main interface for creating and running interval workouts with drag-to-reorder segments. Includes datalist autocomplete for workout names showing existing templates. When a template is selected, segments auto-populate. Workouts are automatically saved as templates when Start is pressed.
+- **TimerPage:** Main interface for creating and running interval workouts with drag-to-reorder segments. Includes datalist autocomplete for workout names showing existing templates. When a template is selected, segments auto-populate. Workouts are automatically saved as templates when Start is pressed. Active workouts run in background when navigating to other pages.
 - **HistoryPage:** List view of completed workouts with expandable details and delete functionality
 - **AnalyticsPage:** Performance metrics and charts for specific segment types
+
+**Background Workout Tracking:**
+- Active workouts continue running when navigating between tabs
+- WorkoutContext manages global workout state (timer, segments, progress)
+- Timer runs via setInterval in context, persists across page navigation
+- BottomNav shows workout indicator when workout is active and user is on non-Timer page
+- Indicator displays current segment name, elapsed time, and running/paused status
+- Click indicator to return to Timer page and see full ActiveTimer view
+- Green pulsing dot indicates running workout, yellow dot indicates paused
 
 **Workout Template System:**
 - Templates are automatically saved when users start a workout

@@ -5,9 +5,10 @@ import IntervalInput from "@/components/IntervalInput";
 import ActiveTimer from "@/components/ActiveTimer";
 import WorkoutSummary from "@/components/WorkoutSummary";
 import { getSavedSegmentNames, saveSegmentName, removeSegmentName } from "@/lib/segmentNames";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import type { WorkoutTemplate, TemplateSegment } from "@shared/schema";
 import {
   DndContext,
   closestCenter,
@@ -110,6 +111,11 @@ export default function TimerPage() {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const inputRefs = useRef<Map<string, HTMLInputElement>>(new Map());
 
+  // Fetch workout templates
+  const { data: templates } = useQuery<{ template: WorkoutTemplate; segments: TemplateSegment[] }[]>({
+    queryKey: ["/api/templates"],
+  });
+
   const saveWorkoutMutation = useMutation({
     mutationFn: async (data: { workoutName: string; segments: CompletedSegment[]; totalTime: number }) => {
       return apiRequest("POST", "/api/workouts", {
@@ -135,6 +141,19 @@ export default function TimerPage() {
         title: "Error",
         description: "Failed to save workout. Please try again.",
         variant: "destructive",
+      });
+    },
+  });
+
+  const saveTemplateMutation = useMutation({
+    mutationFn: async (data: { name: string; segments: Interval[] }) => {
+      return apiRequest("POST", "/api/templates", {
+        name: data.name,
+        segments: data.segments.map((seg, index) => ({
+          name: seg.name,
+          duration: 0, // Templates don't store duration, only segment names
+          order: index,
+        })),
       });
     },
   });
@@ -215,6 +234,14 @@ export default function TimerPage() {
       });
       setSavedSegmentNames(getSavedSegmentNames());
       
+      // Save as template
+      if (workoutName && workoutName.trim()) {
+        saveTemplateMutation.mutate({
+          name: workoutName.trim(),
+          segments: validIntervals,
+        });
+      }
+      
       setIntervals(validIntervals);
       setIsActive(true);
       setIsPaused(false);
@@ -222,6 +249,21 @@ export default function TimerPage() {
       setCurrentSegmentTime(0);
       setTotalTime(0);
       setCompletedSegments([]);
+    }
+  };
+
+  const handleWorkoutNameChange = (name: string) => {
+    setWorkoutName(name);
+    
+    // Check if this matches a template
+    const matchingTemplate = templates?.find(t => t.template.name === name);
+    if (matchingTemplate) {
+      // Auto-populate segments from template
+      const templateIntervals = matchingTemplate.segments.map(seg => ({
+        id: Date.now().toString() + Math.random(),
+        name: seg.name,
+      }));
+      setIntervals(templateIntervals.length > 0 ? templateIntervals : [{ id: Date.now().toString(), name: "" }]);
     }
   };
 
@@ -316,10 +358,16 @@ export default function TimerPage() {
           data-testid="input-workout-name"
           type="text"
           value={workoutName}
-          onChange={(e) => setWorkoutName(e.target.value)}
+          onChange={(e) => handleWorkoutNameChange(e.target.value)}
           placeholder="Workout name"
+          list="workout-templates"
           className="w-full px-3 py-2 text-2xl font-bold border border-border rounded-md bg-card focus:outline-none focus:ring-2 focus:ring-ring"
         />
+        <datalist id="workout-templates">
+          {templates?.map((t) => (
+            <option key={t.template.id} value={t.template.name} />
+          ))}
+        </datalist>
       </div>
 
       <DndContext

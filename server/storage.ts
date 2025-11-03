@@ -1,6 +1,6 @@
-import { type Workout, type InsertWorkout, type Segment, type InsertSegment, type User, type UpsertUser, workouts, segments, users } from "@shared/schema";
+import { type Workout, type InsertWorkout, type Segment, type InsertSegment, type User, type UpsertUser, type WorkoutTemplate, type InsertWorkoutTemplate, type TemplateSegment, type InsertTemplateSegment, workouts, segments, users, workoutTemplates, templateSegments } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 
 // Reference: blueprint:javascript_log_in_with_replit
 export interface IStorage {
@@ -17,17 +17,27 @@ export interface IStorage {
   
   // Segment operations
   getSegmentsByName(name: string, userId: string): Promise<Segment[]>;
+  
+  // Template operations
+  createOrUpdateTemplate(userId: string, name: string, segments: Omit<InsertTemplateSegment, "templateId">[]): Promise<{ template: WorkoutTemplate; segments: TemplateSegment[] }>;
+  getTemplates(userId: string): Promise<{ template: WorkoutTemplate; segments: TemplateSegment[] }[]>;
+  getTemplateByName(name: string, userId: string): Promise<{ template: WorkoutTemplate; segments: TemplateSegment[] } | undefined>;
+  deleteTemplate(id: string, userId: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private workouts: Map<string, Workout>;
   private segments: Map<string, Segment>;
+  private templates: Map<string, WorkoutTemplate>;
+  private templateSegs: Map<string, TemplateSegment>;
 
   constructor() {
     this.users = new Map();
     this.workouts = new Map();
     this.segments = new Map();
+    this.templates = new Map();
+    this.templateSegs = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -165,6 +175,99 @@ export class MemStorage implements IStorage {
       Array.from(this.segments.entries()).forEach(([segId, seg]) => {
         if (seg.workoutId === id) {
           this.segments.delete(segId);
+        }
+      });
+    }
+  }
+
+  async createOrUpdateTemplate(
+    userId: string,
+    name: string,
+    segmentInputs: Omit<InsertTemplateSegment, "templateId">[]
+  ): Promise<{ template: WorkoutTemplate; segments: TemplateSegment[] }> {
+    // Find existing template by name
+    const existing = Array.from(this.templates.values()).find(
+      (t) => t.userId === userId && t.name === name
+    );
+
+    let template: WorkoutTemplate;
+    if (existing) {
+      // Update existing
+      template = {
+        ...existing,
+        updatedAt: new Date(),
+      };
+      this.templates.set(existing.id, template);
+      
+      // Delete old template segments
+      Array.from(this.templateSegs.entries()).forEach(([segId, seg]) => {
+        if (seg.templateId === existing.id) {
+          this.templateSegs.delete(segId);
+        }
+      });
+    } else {
+      // Create new
+      const templateId = crypto.randomUUID();
+      template = {
+        id: templateId,
+        userId,
+        name,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.templates.set(templateId, template);
+    }
+
+    // Create template segments
+    const segments = segmentInputs.map((seg) => {
+      const segmentId = crypto.randomUUID();
+      const segment: TemplateSegment = {
+        id: segmentId,
+        templateId: template.id,
+        name: seg.name,
+        duration: seg.duration,
+        order: seg.order,
+      };
+      this.templateSegs.set(segmentId, segment);
+      return segment;
+    });
+
+    return { template, segments };
+  }
+
+  async getTemplates(userId: string): Promise<{ template: WorkoutTemplate; segments: TemplateSegment[] }[]> {
+    return Array.from(this.templates.values())
+      .filter((template) => template.userId === userId)
+      .map((template) => ({
+        template,
+        segments: Array.from(this.templateSegs.values())
+          .filter((seg) => seg.templateId === template.id)
+          .sort((a, b) => a.order - b.order),
+      }))
+      .sort((a, b) => b.template.updatedAt.getTime() - a.template.updatedAt.getTime());
+  }
+
+  async getTemplateByName(name: string, userId: string): Promise<{ template: WorkoutTemplate; segments: TemplateSegment[] } | undefined> {
+    const template = Array.from(this.templates.values()).find(
+      (t) => t.userId === userId && t.name === name
+    );
+    if (!template) return undefined;
+
+    const segments = Array.from(this.templateSegs.values())
+      .filter((seg) => seg.templateId === template.id)
+      .sort((a, b) => a.order - b.order);
+
+    return { template, segments };
+  }
+
+  async deleteTemplate(id: string, userId: string): Promise<void> {
+    const template = this.templates.get(id);
+    if (template && template.userId === userId) {
+      this.templates.delete(id);
+      // Delete all template segments
+      Array.from(this.templateSegs.entries()).forEach(([segId, seg]) => {
+        if (seg.templateId === id) {
+          this.templateSegs.delete(segId);
         }
       });
     }
@@ -312,6 +415,96 @@ export class DbStorage implements IStorage {
   async deleteWorkout(id: string, userId: string): Promise<void> {
     // Cascade delete will automatically remove segments
     await db.delete(workouts).where(sql`${workouts.id} = ${id} AND ${workouts.userId} = ${userId}`);
+  }
+
+  async createOrUpdateTemplate(
+    userId: string,
+    name: string,
+    segmentInputs: Omit<InsertTemplateSegment, "templateId">[]
+  ): Promise<{ template: WorkoutTemplate; segments: TemplateSegment[] }> {
+    return await db.transaction(async (tx) => {
+      // Check if template already exists
+      const [existing] = await tx
+        .select()
+        .from(workoutTemplates)
+        .where(and(eq(workoutTemplates.userId, userId), eq(workoutTemplates.name, name)));
+
+      let template: WorkoutTemplate;
+      if (existing) {
+        // Update existing template
+        [template] = await tx
+          .update(workoutTemplates)
+          .set({ updatedAt: new Date() })
+          .where(eq(workoutTemplates.id, existing.id))
+          .returning();
+
+        // Delete old template segments
+        await tx.delete(templateSegments).where(eq(templateSegments.templateId, existing.id));
+      } else {
+        // Create new template
+        [template] = await tx
+          .insert(workoutTemplates)
+          .values({ userId, name })
+          .returning();
+      }
+
+      // Insert template segments
+      const segmentsToInsert = segmentInputs.map((seg) => ({
+        ...seg,
+        templateId: template.id,
+      }));
+
+      const createdSegments = await tx
+        .insert(templateSegments)
+        .values(segmentsToInsert)
+        .returning();
+
+      return { template, segments: createdSegments };
+    });
+  }
+
+  async getTemplates(userId: string): Promise<{ template: WorkoutTemplate; segments: TemplateSegment[] }[]> {
+    const allTemplates = await db
+      .select()
+      .from(workoutTemplates)
+      .where(eq(workoutTemplates.userId, userId))
+      .orderBy(desc(workoutTemplates.updatedAt));
+
+    const result = await Promise.all(
+      allTemplates.map(async (template) => {
+        const templateSegs = await db
+          .select()
+          .from(templateSegments)
+          .where(eq(templateSegments.templateId, template.id))
+          .orderBy(templateSegments.order);
+
+        return { template, segments: templateSegs };
+      })
+    );
+
+    return result;
+  }
+
+  async getTemplateByName(name: string, userId: string): Promise<{ template: WorkoutTemplate; segments: TemplateSegment[] } | undefined> {
+    const [template] = await db
+      .select()
+      .from(workoutTemplates)
+      .where(and(eq(workoutTemplates.userId, userId), eq(workoutTemplates.name, name)));
+
+    if (!template) return undefined;
+
+    const templateSegs = await db
+      .select()
+      .from(templateSegments)
+      .where(eq(templateSegments.templateId, template.id))
+      .orderBy(templateSegments.order);
+
+    return { template, segments: templateSegs };
+  }
+
+  async deleteTemplate(id: string, userId: string): Promise<void> {
+    // Cascade delete will automatically remove template segments
+    await db.delete(workoutTemplates).where(and(eq(workoutTemplates.id, id), eq(workoutTemplates.userId, userId)));
   }
 }
 

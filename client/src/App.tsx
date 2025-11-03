@@ -11,6 +11,7 @@ import AnalyticsPage from "@/pages/AnalyticsPage";
 import ProfilePage from "@/pages/ProfilePage";
 import LandingPage from "@/pages/LandingPage";
 import { useAuth } from "@/hooks/useAuth";
+import { WorkoutProvider } from "@/contexts/WorkoutContext";
 
 // Reference: blueprint:javascript_log_in_with_replit
 function Router() {
@@ -53,8 +54,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <AppContent />
-        <Toaster />
+        <WorkoutProvider>
+          <AppContent />
+          <Toaster />
+        </WorkoutProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

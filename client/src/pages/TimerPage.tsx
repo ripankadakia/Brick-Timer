@@ -6,7 +6,7 @@ import ActiveTimer from "@/components/ActiveTimer";
 import WorkoutSummary from "@/components/WorkoutSummary";
 import { getSavedSegmentNames, saveSegmentName, removeSegmentName } from "@/lib/segmentNames";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { WorkoutTemplate, TemplateSegment } from "@shared/schema";
 import {
@@ -155,6 +155,10 @@ export default function TimerPage() {
           order: index,
         })),
       });
+    },
+    onSuccess: () => {
+      // Invalidate templates query to refresh autocomplete
+      queryClient.invalidateQueries({ queryKey: ["/api/templates"] });
     },
   });
 

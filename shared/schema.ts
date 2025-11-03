@@ -43,6 +43,22 @@ export const segments = pgTable("segments", {
   order: integer("order").notNull(),
 });
 
+export const workoutTemplates = pgTable("workout_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const templateSegments = pgTable("template_segments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  templateId: varchar("template_id").notNull().references(() => workoutTemplates.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  duration: integer("duration").notNull(),
+  order: integer("order").notNull(),
+});
+
 export const insertWorkoutSchema = createInsertSchema(workouts).omit({
   id: true,
   date: true,
@@ -53,9 +69,24 @@ export const insertSegmentSchema = createInsertSchema(segments).omit({
   id: true,
 });
 
+export const insertWorkoutTemplateSchema = createInsertSchema(workoutTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  userId: true,
+});
+
+export const insertTemplateSegmentSchema = createInsertSchema(templateSegments).omit({
+  id: true,
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type InsertWorkout = z.infer<typeof insertWorkoutSchema>;
 export type Workout = typeof workouts.$inferSelect;
 export type InsertSegment = z.infer<typeof insertSegmentSchema>;
 export type Segment = typeof segments.$inferSelect;
+export type InsertWorkoutTemplate = z.infer<typeof insertWorkoutTemplateSchema>;
+export type WorkoutTemplate = typeof workoutTemplates.$inferSelect;
+export type InsertTemplateSegment = z.infer<typeof insertTemplateSegmentSchema>;
+export type TemplateSegment = typeof templateSegments.$inferSelect;

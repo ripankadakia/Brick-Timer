@@ -15,6 +15,12 @@ interface CompletedSegment {
   duration: number;
 }
 
+interface CompletedWorkout {
+  workoutName: string;
+  segments: CompletedSegment[];
+  totalTime: number;
+}
+
 interface WorkoutState {
   workoutName: string;
   intervals: Interval[];
@@ -24,8 +30,6 @@ interface WorkoutState {
   currentSegmentTime: number;
   totalTime: number;
   completedSegments: ActiveSegment[];
-  showSummary: boolean;
-  summaryData: { workoutName: string; segments: CompletedSegment[]; totalTime: number } | null;
 }
 
 interface WorkoutContextType extends WorkoutState {
@@ -33,8 +37,7 @@ interface WorkoutContextType extends WorkoutState {
   setIntervals: (intervals: Interval[]) => void;
   startWorkout: (name: string, intervals: Interval[]) => void;
   togglePause: () => void;
-  completeSegment: () => void;
-  finishWorkout: () => void;
+  completeSegment: () => CompletedWorkout | null;
   resetWorkout: () => void;
 }
 
@@ -49,8 +52,6 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
   const [currentSegmentTime, setCurrentSegmentTime] = useState(0);
   const [totalTime, setTotalTime] = useState(0);
   const [completedSegments, setCompletedSegments] = useState<ActiveSegment[]>([]);
-  const [showSummary, setShowSummary] = useState(false);
-  const [summaryData, setSummaryData] = useState<{ workoutName: string; segments: CompletedSegment[]; totalTime: number } | null>(null);
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -84,7 +85,7 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
     setIsPaused(!isPaused);
   };
 
-  const completeSegment = () => {
+  const completeSegment = (): CompletedWorkout | null => {
     const currentSegment = intervals[currentSegmentIndex];
     const updatedCompletedSegments = [
       ...completedSegments,
@@ -93,30 +94,33 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
     setCompletedSegments(updatedCompletedSegments);
 
     if (currentSegmentIndex < intervals.length - 1) {
+      // Move to next segment
       setCurrentSegmentIndex(currentSegmentIndex + 1);
       setCurrentSegmentTime(0);
+      return null;
     } else {
-      // Workout complete - show summary
-      setIsActive(false);
-      setIsPaused(false);
-      
+      // Workout complete - return data and reset
       const finalSegments = updatedCompletedSegments.map(seg => ({
         name: seg.name,
         duration: seg.startTime
       }));
       
-      setSummaryData({
+      const completedWorkout: CompletedWorkout = {
         workoutName: workoutName,
         segments: finalSegments,
         totalTime: totalTime
-      });
-      setShowSummary(true);
+      };
+      
+      // Reset workout state
+      setIsActive(false);
+      setIsPaused(false);
+      setCurrentSegmentIndex(0);
+      setCurrentSegmentTime(0);
+      setTotalTime(0);
+      setCompletedSegments([]);
+      
+      return completedWorkout;
     }
-  };
-
-  const finishWorkout = () => {
-    setShowSummary(false);
-    setSummaryData(null);
   };
 
   const resetWorkout = () => {
@@ -128,8 +132,6 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
     setCurrentSegmentTime(0);
     setTotalTime(0);
     setCompletedSegments([]);
-    setShowSummary(false);
-    setSummaryData(null);
   };
 
   return (
@@ -143,14 +145,11 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
         currentSegmentTime,
         totalTime,
         completedSegments,
-        showSummary,
-        summaryData,
         setWorkoutName,
         setIntervals,
         startWorkout,
         togglePause,
         completeSegment,
-        finishWorkout,
         resetWorkout,
       }}
     >

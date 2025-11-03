@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import IntervalInput from "@/components/IntervalInput";
 import ActiveTimer from "@/components/ActiveTimer";
-import WorkoutSummary from "@/components/WorkoutSummary";
 import { getSavedSegmentNames, saveSegmentName, removeSegmentName } from "@/lib/segmentNames";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -241,31 +240,18 @@ export default function TimerPage() {
     setSavedSegmentNames(getSavedSegmentNames());
   };
 
-  const handleSummaryDone = () => {
-    // Save workout to database
-    if (workout.summaryData) {
-      saveWorkoutMutation.mutate(workout.summaryData);
-    }
-
-    // Reset workout context
-    workout.finishWorkout();
+  const handleCompleteSegment = () => {
+    const completedWorkout = workout.completeSegment();
     
-    // Reset setup state
-    setSetupWorkoutName("New Workout");
-    setSetupIntervals([{ id: Date.now().toString(), name: "" }]);
+    // If workout is complete, save it automatically
+    if (completedWorkout) {
+      saveWorkoutMutation.mutate(completedWorkout);
+      
+      // Reset setup state
+      setSetupWorkoutName("New Workout");
+      setSetupIntervals([{ id: Date.now().toString(), name: "" }]);
+    }
   };
-
-  // Show summary view
-  if (workout.showSummary && workout.summaryData) {
-    return (
-      <WorkoutSummary
-        workoutName={workout.summaryData.workoutName}
-        segments={workout.summaryData.segments}
-        totalTime={workout.summaryData.totalTime}
-        onDone={handleSummaryDone}
-      />
-    );
-  }
 
   // Show active timer view
   if (workout.isActive) {
@@ -280,7 +266,7 @@ export default function TimerPage() {
           .map((i) => i.name)}
         isRunning={!workout.isPaused}
         onTogglePause={workout.togglePause}
-        onCompleteSegment={workout.completeSegment}
+        onCompleteSegment={handleCompleteSegment}
       />
     );
   }

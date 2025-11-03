@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import IntervalInput from "@/components/IntervalInput";
 import ActiveTimer from "@/components/ActiveTimer";
+import WorkoutSummary from "@/components/WorkoutSummary";
 import { getSavedSegmentNames, saveSegmentName, removeSegmentName } from "@/lib/segmentNames";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -246,12 +247,29 @@ export default function TimerPage() {
     // If workout is complete, save it automatically
     if (completedWorkout) {
       saveWorkoutMutation.mutate(completedWorkout);
-      
-      // Reset setup state
-      setSetupWorkoutName("New Workout");
-      setSetupIntervals([{ id: Date.now().toString(), name: "" }]);
     }
   };
+
+  const handleStartNewWorkout = () => {
+    // Reset workout context
+    workout.resetWorkout();
+    
+    // Reset setup state
+    setSetupWorkoutName("New Workout");
+    setSetupIntervals([{ id: Date.now().toString(), name: "" }]);
+  };
+
+  // Show summary view after workout completion
+  if (workout.showSummary) {
+    return (
+      <WorkoutSummary
+        workoutName={workout.workoutName}
+        segments={workout.completedSegments}
+        totalTime={workout.totalTime}
+        onStartNewWorkout={handleStartNewWorkout}
+      />
+    );
+  }
 
   // Show active timer view
   if (workout.isActive) {

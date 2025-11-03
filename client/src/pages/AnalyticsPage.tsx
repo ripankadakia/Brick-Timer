@@ -49,7 +49,7 @@ export default function AnalyticsPage() {
     }
 
     // Get all segments of the selected type
-    const segments: Array<{ duration: number; date: Date; workoutId: string }> = [];
+    const segments: Array<{ duration: number; date: Date; workoutId: string; order: number }> = [];
     workouts.forEach(({ workout, segments: segs }) => {
       segs.forEach((seg) => {
         if (seg.name === selectedSegment) {
@@ -57,13 +57,19 @@ export default function AnalyticsPage() {
             duration: seg.duration,
             date: new Date(workout.date),
             workoutId: workout.id,
+            order: seg.order,
           });
         }
       });
     });
 
-    // Sort by date (newest first)
-    segments.sort((a, b) => b.date.getTime() - a.date.getTime());
+    // Sort by date (newest first), then by order within same date
+    segments.sort((a, b) => {
+      const dateCompare = b.date.getTime() - a.date.getTime();
+      if (dateCompare !== 0) return dateCompare;
+      // Same date: sort by order (segments completed first come first)
+      return a.order - b.order;
+    });
 
     if (segments.length === 0) {
       return {
@@ -101,8 +107,8 @@ export default function AnalyticsPage() {
     const trendData = segments
       .slice(0, Math.min(10, segments.length))
       .reverse()
-      .map((seg, index) => ({
-        date: index.toString(),
+      .map((seg) => ({
+        date: seg.date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
         time: seg.duration,
       }));
 

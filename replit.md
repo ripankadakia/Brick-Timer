@@ -34,9 +34,18 @@ Preferred communication style: Simple, everyday language.
 
 **Key Pages:**
 - **LandingPage:** Public landing page for logged-out users with sign-in button
-- **TimerPage:** Main interface for creating and running interval workouts with drag-to-reorder segments (displays workout name during active workout)
+- **TimerPage:** Main interface for creating and running interval workouts with drag-to-reorder segments. Includes datalist autocomplete for workout names showing existing templates. When a template is selected, segments auto-populate. Workouts are automatically saved as templates when Start is pressed.
 - **HistoryPage:** List view of completed workouts with expandable details and delete functionality
 - **AnalyticsPage:** Performance metrics and charts for specific segment types
+
+**Workout Template System:**
+- Templates are automatically saved when users start a workout
+- Workout name input features datalist autocomplete showing existing templates
+- Selecting a template from autocomplete auto-populates all segments in correct order
+- Templates include workout name and ordered segment names
+- Each user has their own private templates
+- Template creation/update uses upsert logic (creates new or updates existing by name)
+- React Query cache invalidation ensures templates appear immediately after save
 
 ### Backend Architecture
 
@@ -89,13 +98,30 @@ Preferred communication style: Simple, everyday language.
 - `duration`: Integer representing segment duration in seconds
 - `order`: Integer for segment sequence position
 
+**Workout Templates Table:**
+- `id`: UUID primary key (auto-generated)
+- `userId`: Foreign key to users (cascade delete)
+- `name`: Text field for template name (unique per user)
+- `createdAt`: Timestamp (defaults to current time)
+- `updatedAt`: Timestamp (updated on template modification)
+
+**Template Segments Table:**
+- `id`: UUID primary key (auto-generated)
+- `templateId`: Foreign key to workout_templates (cascade delete)
+- `name`: Text field for segment name
+- `duration`: Integer (always 0 for templates, only stores segment names)
+- `order`: Integer for segment sequence position
+
 **Validation:** Zod schemas generated from Drizzle table definitions for type-safe input validation.
 
 **Relationships:** 
 - Users have many workouts (one-to-many)
+- Users have many workout templates (one-to-many)
 - Workouts have many segments (one-to-many)
-- Deleting a user cascades to remove all workouts and segments
+- Templates have many template segments (one-to-many)
+- Deleting a user cascades to remove all workouts, templates, and segments
 - Deleting a workout cascades to remove all associated segments
+- Deleting a template cascades to remove all associated template segments
 
 ### External Dependencies
 

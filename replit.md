@@ -56,6 +56,18 @@ Preferred communication style: Simple, everyday language.
 - Toast notification confirms "Workout Saved"
 - No summary screen or "Done" button - prevents data loss from forgotten clicks
 
+**Discard Workout:**
+- Discard button appears when workout is paused
+- Only visible when isPaused=true (not during active running)
+- Clicking discard shows confirmation dialog with destructive styling
+- Dialog warns: "All progress will be lost and the workout will not be saved"
+- User must confirm to proceed with discard
+- discardWorkout() calls resetWorkout() to completely clear all state
+- Clears: workoutName, intervals, isActive, isPaused, timers, completedSegments
+- Returns to setup view with fresh state
+- No database save occurs - workout data is completely discarded
+- No toast notification (silent discard after confirmation)
+
 **Workout Template System:**
 - Templates are automatically saved when users start a workout
 - Workout name input features datalist autocomplete showing existing templates

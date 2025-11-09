@@ -1,7 +1,18 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, Pause, Play } from "lucide-react";
+import { Check, Pause, Play, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ActiveTimerProps {
   workoutName: string;
@@ -12,6 +23,7 @@ interface ActiveTimerProps {
   isRunning: boolean;
   onTogglePause: () => void;
   onCompleteSegment: () => void;
+  onDiscardWorkout: () => void;
 }
 
 export default function ActiveTimer({
@@ -23,11 +35,19 @@ export default function ActiveTimer({
   isRunning,
   onTogglePause,
   onCompleteSegment,
+  onDiscardWorkout,
 }: ActiveTimerProps) {
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const handleDiscardConfirm = () => {
+    setShowDiscardDialog(false);
+    onDiscardWorkout();
   };
 
   return (
@@ -72,27 +92,63 @@ export default function ActiveTimer({
         )}
       </div>
 
-      <div className="flex gap-3">
-        <Button
-          data-testid="button-pause"
-          size="lg"
-          variant="outline"
-          onClick={onTogglePause}
-          className="flex-1"
-        >
-          {isRunning ? <Pause className="w-5 h-5 mr-2" /> : <Play className="w-5 h-5 mr-2" />}
-          {isRunning ? "Pause" : "Resume"}
-        </Button>
-        <Button
-          data-testid="button-complete-segment"
-          size="lg"
-          onClick={onCompleteSegment}
-          className="flex-1"
-        >
-          <Check className="w-5 h-5 mr-2" />
-          Complete Segment
-        </Button>
+      <div className="flex flex-col gap-3">
+        <div className="flex gap-3">
+          <Button
+            data-testid="button-pause"
+            size="lg"
+            variant="outline"
+            onClick={onTogglePause}
+            className="flex-1"
+          >
+            {isRunning ? <Pause className="w-5 h-5 mr-2" /> : <Play className="w-5 h-5 mr-2" />}
+            {isRunning ? "Pause" : "Resume"}
+          </Button>
+          <Button
+            data-testid="button-complete-segment"
+            size="lg"
+            onClick={onCompleteSegment}
+            className="flex-1"
+          >
+            <Check className="w-5 h-5 mr-2" />
+            Complete Segment
+          </Button>
+        </div>
+        
+        {!isRunning && (
+          <Button
+            data-testid="button-discard-workout"
+            size="lg"
+            variant="destructive"
+            onClick={() => setShowDiscardDialog(true)}
+            className="w-full"
+          >
+            <Trash2 className="w-5 h-5 mr-2" />
+            Discard Workout
+          </Button>
+        )}
       </div>
+
+      <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard Workout?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to discard this workout? All progress will be lost and the workout will not be saved.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-discard-cancel">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              data-testid="button-discard-confirm"
+              onClick={handleDiscardConfirm}
+              className="bg-destructive text-destructive-foreground hover-elevate"
+            >
+              Discard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

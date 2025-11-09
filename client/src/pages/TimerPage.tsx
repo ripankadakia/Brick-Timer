@@ -247,29 +247,21 @@ export default function TimerPage() {
     // If workout is complete, save it automatically
     if (completedWorkout) {
       saveWorkoutMutation.mutate(completedWorkout);
+      
+      // Reset setup state
+      setSetupWorkoutName("New Workout");
+      setSetupIntervals([{ id: Date.now().toString(), name: "" }]);
     }
   };
 
-  const handleStartNewWorkout = () => {
-    // Reset workout context
-    workout.resetWorkout();
+  const handleDiscardWorkout = () => {
+    // Discard workout in context (doesn't save)
+    workout.discardWorkout();
     
     // Reset setup state
     setSetupWorkoutName("New Workout");
     setSetupIntervals([{ id: Date.now().toString(), name: "" }]);
   };
-
-  // Show summary view after workout completion
-  if (workout.showSummary) {
-    return (
-      <WorkoutSummary
-        workoutName={workout.workoutName}
-        segments={workout.completedSegments}
-        totalTime={workout.totalTime}
-        onStartNewWorkout={handleStartNewWorkout}
-      />
-    );
-  }
 
   // Show active timer view
   if (workout.isActive) {
@@ -285,6 +277,7 @@ export default function TimerPage() {
         isRunning={!workout.isPaused}
         onTogglePause={workout.togglePause}
         onCompleteSegment={handleCompleteSegment}
+        onDiscardWorkout={handleDiscardWorkout}
       />
     );
   }

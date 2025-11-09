@@ -125,12 +125,8 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
   };
 
   const discardWorkout = () => {
-    setIsActive(false);
-    setIsPaused(false);
-    setCurrentSegmentIndex(0);
-    setCurrentSegmentTime(0);
-    setTotalTime(0);
-    setCompletedSegments([]);
+    // Discard is same as reset - clear all workout state
+    resetWorkout();
   };
 
   const resetWorkout = () => {

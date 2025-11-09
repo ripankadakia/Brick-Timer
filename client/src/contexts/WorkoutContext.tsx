@@ -29,8 +29,7 @@ interface WorkoutState {
   currentSegmentIndex: number;
   currentSegmentTime: number;
   totalTime: number;
-  completedSegments: CompletedSegment[];
-  showSummary: boolean;
+  completedSegments: ActiveSegment[];
 }
 
 interface WorkoutContextType extends WorkoutState {
@@ -39,6 +38,7 @@ interface WorkoutContextType extends WorkoutState {
   startWorkout: (name: string, intervals: Interval[]) => void;
   togglePause: () => void;
   completeSegment: () => CompletedWorkout | null;
+  discardWorkout: () => void;
   resetWorkout: () => void;
 }
 
@@ -52,8 +52,7 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
   const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
   const [currentSegmentTime, setCurrentSegmentTime] = useState(0);
   const [totalTime, setTotalTime] = useState(0);
-  const [completedSegments, setCompletedSegments] = useState<CompletedSegment[]>([]);
-  const [showSummary, setShowSummary] = useState(false);
+  const [completedSegments, setCompletedSegments] = useState<ActiveSegment[]>([]);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -81,7 +80,6 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
     setCurrentSegmentTime(0);
     setTotalTime(0);
     setCompletedSegments([]);
-    setShowSummary(false); // Ensure summary is hidden when starting a new workout
   };
 
   const togglePause = () => {
@@ -89,39 +87,50 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
   };
 
   const completeSegment = (): CompletedWorkout | null => {
-    // Add current segment to completed list
-    const currentInterval = intervals[currentSegmentIndex];
-    if (currentInterval) {
-      setCompletedSegments((prev) => [
-        ...prev,
-        { name: currentInterval.name, duration: currentSegmentTime },
-      ]);
-    }
+    const currentSegment = intervals[currentSegmentIndex];
+    const updatedCompletedSegments = [
+      ...completedSegments,
+      { name: currentSegment.name, startTime: currentSegmentTime },
+    ];
+    setCompletedSegments(updatedCompletedSegments);
 
-    // Check if there are more segments
     if (currentSegmentIndex < intervals.length - 1) {
-      setCurrentSegmentIndex((prev) => prev + 1);
+      // Move to next segment
+      setCurrentSegmentIndex(currentSegmentIndex + 1);
       setCurrentSegmentTime(0);
       return null;
     } else {
-      // Workout complete - show summary instead of resetting
-      const finalSegments = [
-        ...completedSegments,
-        { name: currentInterval.name, duration: currentSegmentTime },
-      ];
-      const completedWorkout = {
-        workoutName,
+      // Workout complete - return data and reset
+      const finalSegments = updatedCompletedSegments.map(seg => ({
+        name: seg.name,
+        duration: seg.startTime
+      }));
+      
+      const completedWorkout: CompletedWorkout = {
+        workoutName: workoutName,
         segments: finalSegments,
-        totalTime,
+        totalTime: totalTime
       };
-
-      // Stop the workout and show summary
+      
+      // Reset workout state
       setIsActive(false);
       setIsPaused(false);
-      setShowSummary(true);
-
+      setCurrentSegmentIndex(0);
+      setCurrentSegmentTime(0);
+      setTotalTime(0);
+      setCompletedSegments([]);
+      
       return completedWorkout;
     }
+  };
+
+  const discardWorkout = () => {
+    setIsActive(false);
+    setIsPaused(false);
+    setCurrentSegmentIndex(0);
+    setCurrentSegmentTime(0);
+    setTotalTime(0);
+    setCompletedSegments([]);
   };
 
   const resetWorkout = () => {
@@ -133,7 +142,6 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
     setCurrentSegmentTime(0);
     setTotalTime(0);
     setCompletedSegments([]);
-    setShowSummary(false);
   };
 
   return (
@@ -147,12 +155,12 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
         currentSegmentTime,
         totalTime,
         completedSegments,
-        showSummary, // Include showSummary in the context value
         setWorkoutName,
         setIntervals,
         startWorkout,
         togglePause,
         completeSegment,
+        discardWorkout,
         resetWorkout,
       }}
     >

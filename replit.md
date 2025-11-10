@@ -85,6 +85,8 @@ Preferred communication style: Simple, everyday language.
 
 **API Design:** RESTful API with routes prefixed by `/api`. All workout and segment routes are protected with authentication middleware.
 
+**Date Handling:** Workout dates can be provided as ISO strings or Date objects. Both POST /api/workouts (create) and PATCH /api/workouts/:id (update) accept optional date field via `updateWorkoutSchema`. When date is omitted (timer auto-save), database defaults to current timestamp. Storage layer converts ISO strings to Date objects before persistence.
+
 **Authentication:** Replit Auth (OpenID Connect) for multi-user support with Google, GitHub, X, Apple, and email/password login. Session-based authentication using PostgreSQL-backed sessions.
 
 **Storage Layer:** Abstract storage interface (`IStorage`) implemented by `DbStorage` using Drizzle ORM with PostgreSQL. All workout operations filter by authenticated user ID.

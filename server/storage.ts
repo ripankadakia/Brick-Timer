@@ -1,4 +1,4 @@
-import { type Workout, type InsertWorkout, type Segment, type InsertSegment, type User, type UpsertUser, type WorkoutTemplate, type InsertWorkoutTemplate, type TemplateSegment, type InsertTemplateSegment, workouts, segments, users, workoutTemplates, templateSegments } from "@shared/schema";
+import { type Workout, type InsertWorkout, type UpdateWorkout, type Segment, type InsertSegment, type User, type UpsertUser, type WorkoutTemplate, type InsertWorkoutTemplate, type TemplateSegment, type InsertTemplateSegment, workouts, segments, users, workoutTemplates, templateSegments } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and } from "drizzle-orm";
 
@@ -9,10 +9,10 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   
   // Workout operations
-  createWorkout(userId: string, workout: InsertWorkout, segments: Omit<InsertSegment, "workoutId">[]): Promise<{ workout: Workout; segments: Segment[] }>;
+  createWorkout(userId: string, workout: UpdateWorkout, segments: Omit<InsertSegment, "workoutId">[]): Promise<{ workout: Workout; segments: Segment[] }>;
   getWorkouts(userId: string): Promise<{ workout: Workout; segments: Segment[] }[]>;
   getWorkoutById(id: string, userId: string): Promise<{ workout: Workout; segments: Segment[] } | undefined>;
-  updateWorkout(id: string, userId: string, workout: Partial<InsertWorkout>, segments: Omit<InsertSegment, "workoutId">[]): Promise<{ workout: Workout; segments: Segment[] }>;
+  updateWorkout(id: string, userId: string, workout: Partial<UpdateWorkout>, segments: Omit<InsertSegment, "workoutId">[]): Promise<{ workout: Workout; segments: Segment[] }>;
   deleteWorkout(id: string, userId: string): Promise<void>;
   
   // Segment operations
@@ -60,15 +60,18 @@ export class MemStorage implements IStorage {
 
   async createWorkout(
     userId: string,
-    workout: InsertWorkout,
+    workout: UpdateWorkout,
     segmentInputs: Omit<InsertSegment, "workoutId">[]
   ): Promise<{ workout: Workout; segments: Segment[] }> {
     const workoutId = crypto.randomUUID();
+    const workoutDate = workout.date 
+      ? (typeof workout.date === 'string' ? new Date(workout.date) : workout.date)
+      : new Date();
     const newWorkout: Workout = {
       id: workoutId,
       userId,
       name: workout.name,
-      date: new Date(),
+      date: workoutDate,
       totalTime: workout.totalTime,
     };
     this.workouts.set(workoutId, newWorkout);
@@ -128,7 +131,7 @@ export class MemStorage implements IStorage {
   async updateWorkout(
     id: string,
     userId: string,
-    workoutUpdate: Partial<InsertWorkout>,
+    workoutUpdate: Partial<UpdateWorkout>,
     segmentInputs: Omit<InsertSegment, "workoutId">[]
   ): Promise<{ workout: Workout; segments: Segment[] }> {
     const workout = this.workouts.get(id);
@@ -136,10 +139,18 @@ export class MemStorage implements IStorage {
       throw new Error("Workout not found");
     }
 
+    // Convert date string to Date if provided
+    const updateData: Partial<Workout> = workoutUpdate.date 
+      ? {
+          ...workoutUpdate,
+          date: typeof workoutUpdate.date === 'string' ? new Date(workoutUpdate.date) : workoutUpdate.date,
+        }
+      : workoutUpdate;
+
     // Update workout
     const updatedWorkout: Workout = {
       ...workout,
-      ...workoutUpdate,
+      ...updateData,
     };
     this.workouts.set(id, updatedWorkout);
 
@@ -297,14 +308,18 @@ export class DbStorage implements IStorage {
 
   async createWorkout(
     userId: string,
-    workout: InsertWorkout,
+    workout: UpdateWorkout,
     segmentInputs: Omit<InsertSegment, "workoutId">[]
   ): Promise<{ workout: Workout; segments: Segment[] }> {
     return await db.transaction(async (tx) => {
-      const [newWorkout] = await tx.insert(workouts).values({
+      const workoutData = {
         ...workout,
         userId,
-      }).returning();
+        date: workout.date 
+          ? (typeof workout.date === 'string' ? new Date(workout.date) : workout.date)
+          : undefined,
+      };
+      const [newWorkout] = await tx.insert(workouts).values(workoutData).returning();
 
       const segmentsToInsert = segmentInputs.map((seg) => ({
         ...seg,
@@ -373,7 +388,7 @@ export class DbStorage implements IStorage {
   async updateWorkout(
     id: string,
     userId: string,
-    workoutUpdate: Partial<InsertWorkout>,
+    workoutUpdate: Partial<UpdateWorkout>,
     segmentInputs: Omit<InsertSegment, "workoutId">[]
   ): Promise<{ workout: Workout; segments: Segment[] }> {
     return await db.transaction(async (tx) => {
@@ -387,10 +402,18 @@ export class DbStorage implements IStorage {
         throw new Error("Workout not found");
       }
 
+      // Convert date string to Date if provided
+      const updateData = {
+        ...workoutUpdate,
+        date: workoutUpdate.date 
+          ? (typeof workoutUpdate.date === 'string' ? new Date(workoutUpdate.date) : workoutUpdate.date)
+          : undefined,
+      };
+
       // Update workout
       const [updatedWorkout] = await tx
         .update(workouts)
-        .set(workoutUpdate)
+        .set(updateData)
         .where(sql`${workouts.id} = ${id}`)
         .returning();
 

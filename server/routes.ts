@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertWorkoutSchema, insertSegmentSchema, insertTemplateSegmentSchema } from "@shared/schema";
+import { insertWorkoutSchema, updateWorkoutSchema, insertSegmentSchema, insertTemplateSegmentSchema } from "@shared/schema";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { z } from "zod";
 
@@ -27,7 +27,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const bodySchema = z.object({
-        workout: insertWorkoutSchema,
+        workout: updateWorkoutSchema,
         segments: z.array(insertSegmentSchema.omit({ workoutId: true })),
       });
 
@@ -88,7 +88,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const bodySchema = z.object({
-        workout: insertWorkoutSchema.partial(),
+        workout: updateWorkoutSchema.partial(),
         segments: z.array(insertSegmentSchema.omit({ workoutId: true })),
       });
 

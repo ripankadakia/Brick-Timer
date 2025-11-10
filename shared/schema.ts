@@ -65,6 +65,13 @@ export const insertWorkoutSchema = createInsertSchema(workouts).omit({
   userId: true,
 });
 
+export const updateWorkoutSchema = createInsertSchema(workouts).omit({
+  id: true,
+  userId: true,
+}).extend({
+  date: z.string().datetime().or(z.date()).optional(),
+});
+
 export const insertSegmentSchema = createInsertSchema(segments).omit({
   id: true,
 });
@@ -83,6 +90,7 @@ export const insertTemplateSegmentSchema = createInsertSchema(templateSegments).
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type InsertWorkout = z.infer<typeof insertWorkoutSchema>;
+export type UpdateWorkout = z.infer<typeof updateWorkoutSchema>;
 export type Workout = typeof workouts.$inferSelect;
 export type InsertSegment = z.infer<typeof insertSegmentSchema>;
 export type Segment = typeof segments.$inferSelect;

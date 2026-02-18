@@ -9,11 +9,38 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
+function requireEnvVar(name: "DATABASE_URL" | "SESSION_SECRET") {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(
+      `Missing required environment variable: ${name}. Add ${name} in your deployment variables before starting the server.`
+    );
+  }
+
+  return value;
+}
+
+function requireOidcClientId() {
+  const oidcClientId =
+    process.env.REPL_ID?.trim() ||
+    process.env.REPLIT_CLIENT_ID?.trim() ||
+    process.env.REPLIT_APP_ID?.trim() ||
+    process.env.OIDC_CLIENT_ID?.trim();
+
+  if (!oidcClientId) {
+    throw new Error(
+      "Missing OIDC client id. Set one of: REPL_ID, REPLIT_CLIENT_ID, REPLIT_APP_ID, or OIDC_CLIENT_ID. If you built on Replit, check the Repl's Secrets/Environment variables for REPL_ID and copy it into Railway."
+    );
+  }
+
+  return oidcClientId;
+}
+
 const getOidcConfig = memoize(
   async () => {
     return await client.discovery(
       new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
-      process.env.REPL_ID!
+      requireOidcClientId()
     );
   },
   { maxAge: 3600 * 1000 }
@@ -23,13 +50,13 @@ export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
-    conString: process.env.DATABASE_URL,
+    conString: requireEnvVar("DATABASE_URL"),
     createTableIfMissing: false,
     ttl: sessionTtl,
     tableName: "sessions",
   });
   return session({
-    secret: process.env.SESSION_SECRET!,
+    secret: requireEnvVar("SESSION_SECRET"),
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
@@ -125,7 +152,7 @@ export async function setupAuth(app: Express) {
     req.logout(() => {
       res.redirect(
         client.buildEndSessionUrl(config, {
-          client_id: process.env.REPL_ID!,
+          client_id: requireOidcClientId(),
           post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
         }).href
       );

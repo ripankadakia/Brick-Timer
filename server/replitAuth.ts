@@ -9,6 +9,7 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
+<<<<<<< ours
 function requireEnvVar(name: "DATABASE_URL" | "SESSION_SECRET") {
   const value = process.env[name]?.trim();
   if (!value) {
@@ -20,6 +21,7 @@ function requireEnvVar(name: "DATABASE_URL" | "SESSION_SECRET") {
   return value;
 }
 
+<<<<<<< ours
 function requireOidcClientId() {
   const oidcClientId =
     process.env.REPL_ID?.trim() ||
@@ -35,12 +37,42 @@ function requireOidcClientId() {
 
   return oidcClientId;
 }
+=======
+function getOidcClientId() {
+  return (
+    process.env.REPL_ID?.trim() ||
+    process.env.REPLIT_CLIENT_ID?.trim() ||
+    process.env.REPLIT_APP_ID?.trim() ||
+    process.env.OIDC_CLIENT_ID?.trim()
+  );
+}
 
+const fallbackUserClaims = {
+  sub: process.env.FALLBACK_USER_ID?.trim() || "railway-local-user",
+  email: process.env.FALLBACK_USER_EMAIL?.trim() || "local-user@example.com",
+  first_name: process.env.FALLBACK_USER_FIRST_NAME?.trim() || "Local",
+  last_name: process.env.FALLBACK_USER_LAST_NAME?.trim() || "User",
+  profile_image_url: process.env.FALLBACK_USER_PROFILE_IMAGE_URL?.trim() || null,
+};
+
+let authMode: "oidc" | "fallback" = "oidc";
+>>>>>>> theirs
+
+=======
+>>>>>>> theirs
 const getOidcConfig = memoize(
   async () => {
     return await client.discovery(
       new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
+<<<<<<< ours
+<<<<<<< ours
       requireOidcClientId()
+=======
+      clientId
+>>>>>>> theirs
+=======
+      process.env.REPL_ID!
+>>>>>>> theirs
     );
   },
   { maxAge: 3600 * 1000 }
@@ -50,13 +82,13 @@ export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
-    conString: requireEnvVar("DATABASE_URL"),
+    conString: process.env.DATABASE_URL,
     createTableIfMissing: false,
     ttl: sessionTtl,
     tableName: "sessions",
   });
   return session({
-    secret: requireEnvVar("SESSION_SECRET"),
+    secret: process.env.SESSION_SECRET!,
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
@@ -152,7 +184,15 @@ export async function setupAuth(app: Express) {
     req.logout(() => {
       res.redirect(
         client.buildEndSessionUrl(config, {
+<<<<<<< ours
+<<<<<<< ours
           client_id: requireOidcClientId(),
+=======
+          client_id: oidcClientId,
+>>>>>>> theirs
+=======
+          client_id: process.env.REPL_ID!,
+>>>>>>> theirs
           post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
         }).href
       );

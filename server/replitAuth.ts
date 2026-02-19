@@ -70,6 +70,11 @@ async function upsertUser(
 }
 
 export async function setupAuth(app: Express) {
+  if (!oidcClientId) {
+    console.warn("OIDC disabled: set REPL_ID or OIDC_CLIENT_ID to enable authentication");
+    return;
+  }
+
   app.set("trust proxy", 1);
   app.use(getSession());
   app.use(passport.initialize());
@@ -140,6 +145,10 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
+  if (typeof req.isAuthenticated !== "function") {
+    return res.status(503).json({ message: "Authentication is not configured" });
+  }
+
   const user = req.user as any;
 
   if (!req.isAuthenticated() || !user.expires_at) {

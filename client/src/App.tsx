@@ -10,6 +10,7 @@ import HistoryPage from "@/pages/HistoryPage";
 import AnalyticsPage from "@/pages/AnalyticsPage";
 import ProfilePage from "@/pages/ProfilePage";
 import LandingPage from "@/pages/LandingPage";
+import LoginPage from "@/pages/LoginPage";
 import { useAuth } from "@/hooks/useAuth";
 import { WorkoutProvider } from "@/contexts/WorkoutContext";
 
@@ -20,7 +21,11 @@ function Router() {
   return (
     <Switch>
       {isLoading || !isAuthenticated ? (
-        <Route path="/" component={LandingPage} />
+        <>
+          <Route path="/" component={LandingPage} />
+          <Route path="/login" component={LoginPage} />
+          <Route component={LandingPage} />
+        </>
       ) : (
         <>
           <Route path="/" component={TimerPage} />

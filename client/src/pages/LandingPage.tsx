@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Timer, BarChart3, History } from "lucide-react";
+import { useLocation } from "wouter";
 
 export default function LandingPage() {
+  const [, setLocation] = useLocation();
+
   return (
     <div className="h-screen overflow-y-auto flex flex-col items-center justify-start sm:justify-center p-6 py-12">
       <div className="max-w-2xl w-full space-y-8">
@@ -48,7 +51,7 @@ export default function LandingPage() {
         <div className="flex justify-center">
           <Button
             size="lg"
-            onClick={() => window.location.href = "/api/login"}
+            onClick={() => setLocation("/login")}
             data-testid="button-login"
           >
             Sign In to Get Started

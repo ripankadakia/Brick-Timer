@@ -1,0 +1,95 @@
+2026-02-20T22:47:06.268696546Z [inf]  Starting Container
+2026-02-20T22:50:06.703435333Z [inf]  10:49:58 PM [express] GET /api/auth/user 401 in 6ms :: {"message":"Unauthorized"}
+2026-02-20T22:50:06.703438603Z [inf]  10:50:02 PM [express] GET /api/login 302 in 7ms
+2026-02-20T22:50:11.719577752Z [err]        },
+2026-02-20T22:50:11.719584207Z [err]      _maxListeners: undefined,
+2026-02-20T22:50:11.719584597Z [err]        message: [Function: onMessage] {
+2026-02-20T22:50:11.719589454Z [err]          [Symbol(kIsForOnEventAttribute)]: false,
+2026-02-20T22:50:11.719604512Z [err]          [Symbol(kListener)]: [Function (anonymous)]
+2026-02-20T22:50:11.719607336Z [err]    [Symbol(kTarget)]: WebSocket {
+2026-02-20T22:50:11.719610594Z [err]        },
+2026-02-20T22:50:11.719614957Z [err]      _events: [Object: null prototype] {
+2026-02-20T22:50:11.719617574Z [err]  
+2026-02-20T22:50:11.719618932Z [err]        close: [Function: onClose] {
+2026-02-20T22:50:11.719622534Z [err]        error: [Function: onError] {
+2026-02-20T22:50:11.719625851Z [err]  file:///app/node_modules/@neondatabase/serverless/index.mjs:1345
+2026-02-20T22:50:11.719628388Z [err]          [Symbol(kIsForOnEventAttribute)]: false,
+2026-02-20T22:50:11.719629557Z [err]          [Symbol(kIsForOnEventAttribute)]: false,
+2026-02-20T22:50:11.719633532Z [err]  o?t(o):n(u)},"cb"),s=new r(function(o,u){n=o,t=u}).catch(o=>{throw Error.captureStackTrace(
+2026-02-20T22:50:11.719637167Z [err]        }
+2026-02-20T22:50:11.719638151Z [err]        },
+2026-02-20T22:50:11.719639025Z [err]          [Symbol(kListener)]: [Function (anonymous)]
+2026-02-20T22:50:11.719639314Z [err]          [Symbol(kListener)]: [Function (anonymous)]
+2026-02-20T22:50:11.719641729Z [err]                                                                           ^
+2026-02-20T22:50:11.719646792Z [err]  ErrorEvent {
+2026-02-20T22:50:11.719648940Z [err]        open: [Function: onOpen] {
+2026-02-20T22:50:11.719649046Z [err]      },
+2026-02-20T22:50:11.719654040Z [err]          [Symbol(kIsForOnEventAttribute)]: false,
+2026-02-20T22:50:11.719654327Z [err]      _eventsCount: 4,
+2026-02-20T22:50:11.719658128Z [err]          [Symbol(kListener)]: [Function: handleWebSocketOpen]
+2026-02-20T22:50:11.720539541Z [err]        at internalConnectMultiple (node:net:1134:18)
+2026-02-20T22:50:11.720541984Z [err]      _extensions: {},
+2026-02-20T22:50:11.720546383Z [err]      _autoPong: true,
+2026-02-20T22:50:11.720548783Z [err]      _paused: false,
+2026-02-20T22:50:11.720550102Z [err]        at afterConnectMultiple (node:net:1715:7) {
+2026-02-20T22:50:11.720554586Z [err]      _protocol: '',
+2026-02-20T22:50:11.720556850Z [err]      _url: 'wss://postgres-qlrz.railway.internal/v2',
+2026-02-20T22:50:11.720559374Z [err]      code: 'ECONNREFUSED',
+2026-02-20T22:50:11.720562020Z [err]      _readyState: 3,
+2026-02-20T22:50:11.720563938Z [err]      _req: null,
+2026-02-20T22:50:11.720568624Z [err]      _receiver: null,
+2026-02-20T22:50:11.720569255Z [err]      [errors]: [
+2026-02-20T22:50:11.720570965Z [err]      [Symbol(shapeMode)]: false,
+2026-02-20T22:50:11.720574954Z [err]      _sender: null,
+2026-02-20T22:50:11.720577229Z [err]      [Symbol(kCapture)]: false
+2026-02-20T22:50:11.720580918Z [err]      _socket: null,
+2026-02-20T22:50:11.720584488Z [err]    },
+2026-02-20T22:50:11.720590516Z [err]      _binaryType: 'arraybuffer',
+2026-02-20T22:50:11.720590738Z [err]      _bufferedAmount: 0,
+2026-02-20T22:50:11.720591355Z [err]    [Symbol(kType)]: 'error',
+2026-02-20T22:50:11.720597896Z [err]    [Symbol(kError)]: AggregateError [ECONNREFUSED]: 
+2026-02-20T22:50:11.720599994Z [err]      _isServer: false,
+2026-02-20T22:50:11.720600920Z [err]      _closeCode: 1006,
+2026-02-20T22:50:11.720606998Z [err]      _redirects: 0,
+2026-02-20T22:50:11.720608535Z [err]      _closeFrameReceived: false,
+2026-02-20T22:50:11.720612546Z [err]      _closeFrameSent: false,
+2026-02-20T22:50:11.720616869Z [err]      _closeMessage: Buffer(0) [Uint8Array] [],
+2026-02-20T22:50:11.720620324Z [err]      _closeTimer: null,
+2026-02-20T22:50:11.720623804Z [err]      _errorEmitted: true,
+2026-02-20T22:50:11.721163338Z [err]  }
+2026-02-20T22:50:11.721170471Z [err]  
+2026-02-20T22:50:11.721176431Z [err]        Error: connect ECONNREFUSED fd12:c2fe:48b7:1:2000:d2:f4ca:c440:443
+2026-02-20T22:50:11.721177815Z [err]  Node.js v22.22.0
+2026-02-20T22:50:11.721180828Z [err]            at createConnectionError (node:net:1678:14)
+2026-02-20T22:50:11.721184000Z [err]            at afterConnectMultiple (node:net:1708:16) {
+2026-02-20T22:50:11.721186777Z [err]          errno: -111,
+2026-02-20T22:50:11.721190015Z [err]          code: 'ECONNREFUSED',
+2026-02-20T22:50:11.721192712Z [err]          syscall: 'connect',
+2026-02-20T22:50:11.721195438Z [err]          address: 'fd12:c2fe:48b7:1:2000:d2:f4ca:c440',
+2026-02-20T22:50:11.721198071Z [err]          port: 443
+2026-02-20T22:50:11.721200728Z [err]        },
+2026-02-20T22:50:11.721203412Z [err]        Error: connect ECONNREFUSED 10.202.196.64:443
+2026-02-20T22:50:11.721206068Z [err]            at createConnectionError (node:net:1678:14)
+2026-02-20T22:50:11.721208888Z [err]            at afterConnectMultiple (node:net:1708:16) {
+2026-02-20T22:50:11.721212335Z [err]          errno: -111,
+2026-02-20T22:50:11.721215108Z [err]          code: 'ECONNREFUSED',
+2026-02-20T22:50:11.721217863Z [err]          syscall: 'connect',
+2026-02-20T22:50:11.721220312Z [err]          address: '10.202.196.64',
+2026-02-20T22:50:11.721223016Z [err]          port: 443
+2026-02-20T22:50:11.721225615Z [err]        }
+2026-02-20T22:50:11.721228358Z [err]      ]
+2026-02-20T22:50:11.721231536Z [err]    },
+2026-02-20T22:50:11.721234584Z [err]    [Symbol(kMessage)]: ''
+2026-02-20T22:50:12.188067301Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-20T22:50:12.199697547Z [inf]  
+2026-02-20T22:50:12.199711421Z [inf]  > rest-express@1.0.0 start
+2026-02-20T22:50:12.199715884Z [inf]  > NODE_ENV=production node dist/index.js
+2026-02-20T22:50:12.199719378Z [inf]  
+2026-02-20T22:50:12.723212959Z [inf]  10:50:12 PM [express] serving on port 8080
+2026-02-20T22:50:13.029711363Z [err]  ResponseBodyError: server responded with an error in the response body
+2026-02-20T22:50:13.029715486Z [err]      at checkOAuthBodyError (file:///app/node_modules/oauth4webapi/build/index.js:924:19)
+2026-02-20T22:50:13.029718838Z [err]      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-02-20T22:50:13.029722295Z [err]      at async processGenericAccessTokenResponse (file:///app/node_modules/oauth4webapi/build/index.js:1202:5)
+2026-02-20T22:50:13.029725631Z [err]      at async processAuthorizationCodeOAuth2Response (file:///app/node_modules/oauth4webapi/build/index.js:1436:20)
+2026-02-20T22:50:13.029728675Z [err]      at async Module.authorizationCodeGrant (file:///app/node_modules/openid-client/build/index.js:980:18)
+2026-02-20T22:50:13.029731533Z [err]      at async Strategy.authorizationCodeGrant (file:///app/node_modules/openid-client/build/passport.js:210:28)

@@ -106,13 +106,13 @@ export async function setupAuth(app: Express) {
         {
           name: strategyName,
           config,
-          client_id: clientId,
-          client_secret: clientSecret,
           scope: "openid email profile offline_access",
           callbackURL: `https://${callbackDomain}/api/callback`,
         },
         verify,
       );
+      (strategy as any).options.client_id = clientId;
+      (strategy as any).options.client_secret = clientSecret;
       passport.use(strategy);
       registeredStrategies.add(strategyName);
     }

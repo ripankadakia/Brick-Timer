@@ -69,6 +69,15 @@ async function upsertUser(
   });
 }
 
+
+function getAuthDomain(req: { hostname: string }) {
+  return process.env.REPLIT_DOMAINS?.split(",")[0] ?? req.hostname;
+}
+
+function getAuthProtocol(req: { protocol?: string; get: (name: string) => string | undefined }) {
+  return (req.get("x-forwarded-proto") ?? req.protocol ?? "https").split(",")[0];
+}
+
 export async function setupAuth(app: Express) {
   if (!oidcClientId) {
     console.warn("OIDC disabled: set REPL_ID or OIDC_CLIENT_ID to enable authentication");
@@ -96,7 +105,7 @@ export async function setupAuth(app: Express) {
   const registeredStrategies = new Set<string>();
 
   // Helper function to ensure strategy exists for a domain
-  const ensureStrategy = (domain: string) => {
+  const ensureStrategy = (domain: string, protocol: string) => {
     const strategyName = `replitauth:${domain}`;
     if (!registeredStrategies.has(strategyName)) {
       const strategy = new Strategy(
@@ -104,7 +113,7 @@ export async function setupAuth(app: Express) {
           name: strategyName,
           config,
           scope: "openid email profile offline_access",
-          callbackURL: `https://${domain}/api/callback`,
+          callbackURL: `${protocol}://${domain}/api/callback`,
         },
         verify,
       );
@@ -117,16 +126,20 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    ensureStrategy(req.hostname);
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    const domain = getAuthDomain(req);
+    const protocol = getAuthProtocol(req);
+    ensureStrategy(domain, protocol);
+    passport.authenticate(`replitauth:${domain}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
     })(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {
-    ensureStrategy(req.hostname);
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    const domain = getAuthDomain(req);
+    const protocol = getAuthProtocol(req);
+    ensureStrategy(domain, protocol);
+    passport.authenticate(`replitauth:${domain}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
     })(req, res, next);
@@ -134,10 +147,12 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/logout", (req, res) => {
     req.logout(() => {
+      const domain = getAuthDomain(req);
+      const protocol = getAuthProtocol(req);
       res.redirect(
         client.buildEndSessionUrl(config, {
           client_id: oidcClientId!,
-          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
+          post_logout_redirect_uri: `${protocol}://${domain}`,
         }).href
       );
     });

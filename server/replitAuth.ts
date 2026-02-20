@@ -18,10 +18,12 @@ const getOidcConfig = memoize(
       throw new Error("Missing REPLIT_AUTH_CLIENT_ID or REPL_ID environment variable");
     }
 
+    // Replit OIDC requires the client ID during discovery for some reason in their blueprint
+    // But standard OIDC discovery only takes the URL. 
+    // We'll stick to the blueprint pattern but ensure variables are correct.
     return await client.discovery(
       new URL(issuerUrl),
-      clientId,
-      process.env.REPLIT_AUTH_CLIENT_SECRET // Optional for some providers
+      clientId
     );
   },
   { maxAge: 3600 * 1000 }
@@ -97,10 +99,15 @@ export async function setupAuth(app: Express) {
     const strategyName = `replitauth:${domain}`;
     if (!registeredStrategies.has(strategyName)) {
       const callbackDomain = process.env.APP_DOMAIN || domain;
+      const clientId = process.env.REPLIT_AUTH_CLIENT_ID || process.env.REPL_ID;
+      const clientSecret = process.env.REPLIT_AUTH_CLIENT_SECRET;
+
       const strategy = new Strategy(
         {
           name: strategyName,
           config,
+          client_id: clientId,
+          client_secret: clientSecret,
           scope: "openid email profile offline_access",
           callbackURL: `https://${callbackDomain}/api/callback`,
         },
@@ -133,12 +140,11 @@ export async function setupAuth(app: Express) {
   app.get("/api/logout", (req, res) => {
     const clientId = process.env.REPLIT_AUTH_CLIENT_ID || process.env.REPL_ID;
     req.logout(() => {
-      res.redirect(
-        client.buildEndSessionUrl(config, {
-          client_id: clientId!,
-          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
-        }).href
-      );
+      const logoutUrl = client.buildEndSessionUrl(config, {
+        client_id: clientId!,
+        post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
+      });
+      return res.redirect(logoutUrl.href);
     });
   });
 }

@@ -1,4 +1,3 @@
-// Reference: blueprint:javascript_log_in_with_replit
 import * as client from "openid-client";
 import { Strategy, type VerifyFunction } from "openid-client/passport";
 
@@ -9,22 +8,26 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
+function isExternalAuth() {
+  return !!process.env.REPLIT_AUTH_CLIENT_ID;
+}
+
 const getOidcConfig = memoize(
   async () => {
-    const issuerUrl = process.env.ISSUER_URL || "https://replit.com/oidc";
-    const clientId = process.env.REPLIT_AUTH_CLIENT_ID || process.env.REPL_ID;
-
-    if (!clientId) {
-      throw new Error("Missing REPLIT_AUTH_CLIENT_ID or REPL_ID environment variable");
+    if (isExternalAuth()) {
+      const clientId = process.env.REPLIT_AUTH_CLIENT_ID!;
+      const clientSecret = process.env.REPLIT_AUTH_CLIENT_SECRET!;
+      return await client.discovery(
+        new URL("https://accounts.google.com"),
+        clientId,
+        clientSecret
+      );
+    } else {
+      return await client.discovery(
+        new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
+        process.env.REPL_ID!
+      );
     }
-
-    // Replit OIDC requires the client ID during discovery for some reason in their blueprint
-    // But standard OIDC discovery only takes the URL. 
-    // We'll stick to the blueprint pattern but ensure variables are correct.
-    return await client.discovery(
-      new URL(issuerUrl),
-      clientId
-    );
   },
   { maxAge: 3600 * 1000 }
 );
@@ -62,15 +65,17 @@ function updateUserSession(
   user.expires_at = user.claims?.exp;
 }
 
-async function upsertUser(
-  claims: any,
-) {
+async function upsertUser(claims: any) {
+  const firstName = claims["first_name"] || claims["given_name"] || null;
+  const lastName = claims["last_name"] || claims["family_name"] || null;
+  const profileImageUrl = claims["profile_image_url"] || claims["picture"] || null;
+
   await storage.upsertUser({
     id: claims["sub"],
     email: claims["email"],
-    firstName: claims["first_name"],
-    lastName: claims["last_name"],
-    profileImageUrl: claims["profile_image_url"],
+    firstName,
+    lastName,
+    profileImageUrl,
   });
 }
 
@@ -81,6 +86,7 @@ export async function setupAuth(app: Express) {
   app.use(passport.session());
 
   const config = await getOidcConfig();
+  const external = isExternalAuth();
 
   const verify: VerifyFunction = async (
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
@@ -92,10 +98,8 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  // Keep track of registered strategies
   const registeredStrategies = new Set<string>();
 
-  // Helper function to ensure strategy exists for a domain
   const ensureStrategy = (domain: string) => {
     const strategyName = `replitauth:${domain}`;
     if (!registeredStrategies.has(strategyName)) {
@@ -105,7 +109,9 @@ export async function setupAuth(app: Express) {
         {
           name: strategyName,
           config,
-          scope: "openid email profile offline_access",
+          scope: external
+            ? "openid email profile"
+            : "openid email profile offline_access",
           callbackURL: `https://${callbackDomain}/api/callback`,
         },
         verify,
@@ -120,9 +126,12 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/login", (req, res, next) => {
     ensureStrategy(req.hostname);
+    const scopes = external
+      ? ["openid", "email", "profile"]
+      : ["openid", "email", "profile", "offline_access"];
     passport.authenticate(`replitauth:${req.hostname}`, {
-      prompt: "login consent",
-      scope: ["openid", "email", "profile", "offline_access"],
+      prompt: external ? "select_account" : "login consent",
+      scope: scopes,
     })(req, res, next);
   });
 
@@ -135,10 +144,12 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/logout", (req, res) => {
-    const clientId = process.env.REPLIT_AUTH_CLIENT_ID || process.env.REPL_ID;
     req.logout(() => {
+      if (external) {
+        return res.redirect("/");
+      }
       const logoutUrl = client.buildEndSessionUrl(config, {
-        client_id: clientId!,
+        client_id: process.env.REPL_ID!,
         post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
       });
       return res.redirect(logoutUrl.href);

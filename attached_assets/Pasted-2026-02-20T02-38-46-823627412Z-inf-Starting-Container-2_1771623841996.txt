@@ -1,0 +1,139 @@
+2026-02-20T02:38:46.823627412Z [inf]  Starting Container
+2026-02-20T02:38:47.738875816Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-20T02:38:47.738879931Z [inf]  
+2026-02-20T02:38:47.738884067Z [inf]  > rest-express@1.0.0 start
+2026-02-20T02:38:47.738888974Z [inf]  > NODE_ENV=production node dist/index.js
+2026-02-20T02:38:47.738893009Z [inf]  
+2026-02-20T02:38:47.755796954Z [err]  file:///app/node_modules/openid-client/build/index.js:89
+2026-02-20T02:38:47.755809338Z [err]      const err = new TypeError(message, { cause });
+2026-02-20T02:38:47.755848499Z [err]                  ^
+2026-02-20T02:38:47.755854762Z [err]  
+2026-02-20T02:38:47.755860820Z [err]  TypeError: "clientId" must be a non-empty string
+2026-02-20T02:38:47.755866568Z [err]      at CodedTypeError (file:///app/node_modules/openid-client/build/index.js:89:17)
+2026-02-20T02:38:47.755872198Z [err]      at new Configuration (file:///app/node_modules/openid-client/build/index.js:463:19)
+2026-02-20T02:38:47.755877255Z [err]      at Module.discovery (file:///app/node_modules/openid-client/build/index.js:244:22)
+2026-02-20T02:38:47.755883537Z [err]      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-02-20T02:38:47.755889368Z [err]      at async memoize.maxAge (file:///app/dist/index.js:240:12)
+2026-02-20T02:38:47.755894746Z [err]      at async setupAuth (file:///app/dist/index.js:288:18)
+2026-02-20T02:38:47.755900140Z [err]      at async registerRoutes (file:///app/dist/index.js:368:3)
+2026-02-20T02:38:47.755906348Z [err]      at async file:///app/dist/index.js:656:18 {
+2026-02-20T02:38:47.755912403Z [err]    code: 'ERR_INVALID_ARG_TYPE',
+2026-02-20T02:38:47.755919291Z [err]    [cause]: undefined
+2026-02-20T02:38:47.755927601Z [err]  }
+2026-02-20T02:38:47.756303930Z [err]  
+2026-02-20T02:38:47.756310388Z [err]  Node.js v22.22.0
+2026-02-20T02:39:17.604720130Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-20T02:39:17.604725698Z [inf]  
+2026-02-20T02:39:17.604731609Z [inf]  > rest-express@1.0.0 start
+2026-02-20T02:39:17.604737208Z [inf]  > NODE_ENV=production node dist/index.js
+2026-02-20T02:39:17.604742600Z [inf]  
+2026-02-20T02:39:17.604748754Z [err]  file:///app/node_modules/openid-client/build/index.js:89
+2026-02-20T02:39:17.604754051Z [err]      const err = new TypeError(message, { cause });
+2026-02-20T02:39:17.604759708Z [err]                  ^
+2026-02-20T02:39:17.604765647Z [err]  
+2026-02-20T02:39:17.604771544Z [err]  TypeError: "clientId" must be a non-empty string
+2026-02-20T02:39:17.604777354Z [err]      at CodedTypeError (file:///app/node_modules/openid-client/build/index.js:89:17)
+2026-02-20T02:39:17.604782968Z [err]      at new Configuration (file:///app/node_modules/openid-client/build/index.js:463:19)
+2026-02-20T02:39:17.604788449Z [err]      at Module.discovery (file:///app/node_modules/openid-client/build/index.js:244:22)
+2026-02-20T02:39:17.604793813Z [err]      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-02-20T02:39:17.604799867Z [err]      at async memoize.maxAge (file:///app/dist/index.js:240:12)
+2026-02-20T02:39:17.604806017Z [err]      at async setupAuth (file:///app/dist/index.js:288:18)
+2026-02-20T02:39:17.604810392Z [err]      at async registerRoutes (file:///app/dist/index.js:368:3)
+2026-02-20T02:39:17.604815067Z [err]      at async file:///app/dist/index.js:656:18 {
+2026-02-20T02:39:17.604819307Z [err]    code: 'ERR_INVALID_ARG_TYPE',
+2026-02-20T02:39:17.604823307Z [err]    [cause]: undefined
+2026-02-20T02:39:17.604827454Z [err]  }
+2026-02-20T02:39:17.604832016Z [err]  
+2026-02-20T02:39:17.604836111Z [err]  Node.js v22.22.0
+2026-02-20T02:39:19.559643220Z [inf]  
+2026-02-20T02:39:19.559654222Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-20T02:39:19.559660945Z [inf]  
+2026-02-20T02:39:19.559667791Z [inf]  > rest-express@1.0.0 start
+2026-02-20T02:39:19.559674043Z [inf]  > NODE_ENV=production node dist/index.js
+2026-02-20T02:39:20.632355100Z [err]  Node.js v22.22.0
+2026-02-20T02:39:20.632355472Z [err]      at async setupAuth (file:///app/dist/index.js:288:18)
+2026-02-20T02:39:20.632355628Z [err]  
+2026-02-20T02:39:20.632369543Z [err]      at async registerRoutes (file:///app/dist/index.js:368:3)
+2026-02-20T02:39:20.632370679Z [err]  TypeError: "clientId" must be a non-empty string
+2026-02-20T02:39:20.632374150Z [err]    code: 'ERR_INVALID_ARG_TYPE',
+2026-02-20T02:39:20.632379241Z [err]      at async file:///app/dist/index.js:656:18 {
+2026-02-20T02:39:20.632379457Z [err]      at CodedTypeError (file:///app/node_modules/openid-client/build/index.js:89:17)
+2026-02-20T02:39:20.632383241Z [err]    [cause]: undefined
+2026-02-20T02:39:20.632385220Z [err]      at new Configuration (file:///app/node_modules/openid-client/build/index.js:463:19)
+2026-02-20T02:39:20.632390899Z [err]      at Module.discovery (file:///app/node_modules/openid-client/build/index.js:244:22)
+2026-02-20T02:39:20.632391780Z [err]  }
+2026-02-20T02:39:20.632395666Z [err]      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-02-20T02:39:20.632401998Z [err]  
+2026-02-20T02:39:20.632403196Z [err]      at async memoize.maxAge (file:///app/dist/index.js:240:12)
+2026-02-20T02:39:20.632516444Z [err]  file:///app/node_modules/openid-client/build/index.js:89
+2026-02-20T02:39:20.632526190Z [err]      const err = new TypeError(message, { cause });
+2026-02-20T02:39:20.632535107Z [err]                  ^
+2026-02-20T21:34:22.928911722Z [err]  Node.js v22.22.0
+2026-02-20T21:34:22.928922636Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-20T21:34:22.928954056Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-20T21:34:22.928963516Z [inf]  
+2026-02-20T21:34:22.928973624Z [inf]  > rest-express@1.0.0 start
+2026-02-20T21:34:22.928979759Z [inf]  > NODE_ENV=production node dist/index.js
+2026-02-20T21:34:22.928984613Z [inf]  
+2026-02-20T21:34:22.928990170Z [err]  file:///app/node_modules/openid-client/build/index.js:89
+2026-02-20T21:34:22.928994651Z [err]      const err = new TypeError(message, { cause });
+2026-02-20T21:34:22.928999158Z [err]                  ^
+2026-02-20T21:34:22.929004883Z [err]  
+2026-02-20T21:34:22.929009119Z [err]  TypeError: "clientId" must be a non-empty string
+2026-02-20T21:34:22.929014553Z [err]      at CodedTypeError (file:///app/node_modules/openid-client/build/index.js:89:17)
+2026-02-20T21:34:22.929018699Z [err]      at new Configuration (file:///app/node_modules/openid-client/build/index.js:463:19)
+2026-02-20T21:34:22.929023160Z [err]      at Module.discovery (file:///app/node_modules/openid-client/build/index.js:244:22)
+2026-02-20T21:34:22.929028435Z [err]      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-02-20T21:34:22.929033201Z [err]      at async memoize.maxAge (file:///app/dist/index.js:240:12)
+2026-02-20T21:34:22.929037414Z [err]      at async setupAuth (file:///app/dist/index.js:288:18)
+2026-02-20T21:34:22.929041658Z [err]      at async registerRoutes (file:///app/dist/index.js:368:3)
+2026-02-20T21:34:22.929047368Z [err]      at async file:///app/dist/index.js:656:18 {
+2026-02-20T21:34:22.929052090Z [err]    code: 'ERR_INVALID_ARG_TYPE',
+2026-02-20T21:34:22.929057337Z [err]    [cause]: undefined
+2026-02-20T21:34:22.929063479Z [err]  }
+2026-02-20T21:34:22.929068969Z [err]  
+2026-02-20T21:34:22.930778247Z [err]      at Module.discovery (file:///app/node_modules/openid-client/build/index.js:244:22)
+2026-02-20T21:34:22.930784832Z [inf]  > rest-express@1.0.0 start
+2026-02-20T21:34:22.930785120Z [err]      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-02-20T21:34:22.930790480Z [err]      at async memoize.maxAge (file:///app/dist/index.js:240:12)
+2026-02-20T21:34:22.930795669Z [err]      at async setupAuth (file:///app/dist/index.js:288:18)
+2026-02-20T21:34:22.930802852Z [err]      at async registerRoutes (file:///app/dist/index.js:368:3)
+2026-02-20T21:34:22.930806434Z [inf]  
+2026-02-20T21:34:22.930809054Z [err]      at async file:///app/dist/index.js:656:18 {
+2026-02-20T21:34:22.930814027Z [err]    code: 'ERR_INVALID_ARG_TYPE',
+2026-02-20T21:34:22.930818413Z [inf]  > rest-express@1.0.0 start
+2026-02-20T21:34:22.930819877Z [err]    [cause]: undefined
+2026-02-20T21:34:22.930825878Z [inf]  > NODE_ENV=production node dist/index.js
+2026-02-20T21:34:22.930826297Z [err]  }
+2026-02-20T21:34:22.930832171Z [err]  
+2026-02-20T21:34:22.930832263Z [inf]  
+2026-02-20T21:34:22.930837215Z [err]  Node.js v22.22.0
+2026-02-20T21:34:22.930839422Z [err]  file:///app/node_modules/openid-client/build/index.js:89
+2026-02-20T21:34:22.930842030Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-20T21:34:22.930845906Z [err]      const err = new TypeError(message, { cause });
+2026-02-20T21:34:22.930847786Z [inf]  
+2026-02-20T21:34:22.930852480Z [err]                  ^
+2026-02-20T21:34:22.930856930Z [err]  
+2026-02-20T21:34:22.930861966Z [err]  TypeError: "clientId" must be a non-empty string
+2026-02-20T21:34:22.930867858Z [err]      at CodedTypeError (file:///app/node_modules/openid-client/build/index.js:89:17)
+2026-02-20T21:34:22.930872483Z [err]      at new Configuration (file:///app/node_modules/openid-client/build/index.js:463:19)
+2026-02-20T21:34:22.932126615Z [inf]  > NODE_ENV=production node dist/index.js
+2026-02-20T21:34:22.932132787Z [inf]  
+2026-02-20T21:34:23.904814774Z [err]      at async setupAuth (file:///app/dist/index.js:288:18)
+2026-02-20T21:34:23.904827136Z [err]      at async registerRoutes (file:///app/dist/index.js:368:3)
+2026-02-20T21:34:23.904834130Z [err]      at async file:///app/dist/index.js:656:18 {
+2026-02-20T21:34:23.904840281Z [err]    code: 'ERR_INVALID_ARG_TYPE',
+2026-02-20T21:34:23.904845306Z [err]    [cause]: undefined
+2026-02-20T21:34:23.904855652Z [err]  }
+2026-02-20T21:34:23.904861412Z [err]  
+2026-02-20T21:34:23.904867235Z [err]  Node.js v22.22.0
+2026-02-20T21:34:23.904954600Z [err]  file:///app/node_modules/openid-client/build/index.js:89
+2026-02-20T21:34:23.904960280Z [err]      const err = new TypeError(message, { cause });
+2026-02-20T21:34:23.904965464Z [err]                  ^
+2026-02-20T21:34:23.904971732Z [err]  
+2026-02-20T21:34:23.904975856Z [err]  TypeError: "clientId" must be a non-empty string
+2026-02-20T21:34:23.904980283Z [err]      at CodedTypeError (file:///app/node_modules/openid-client/build/index.js:89:17)
+2026-02-20T21:34:23.904984959Z [err]      at new Configuration (file:///app/node_modules/openid-client/build/index.js:463:19)
+2026-02-20T21:34:23.904989181Z [err]      at Module.discovery (file:///app/node_modules/openid-client/build/index.js:244:22)
+2026-02-20T21:34:23.904994468Z [err]      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-02-20T21:34:23.904999701Z [err]      at async memoize.maxAge (file:///app/dist/index.js:240:12)

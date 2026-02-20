@@ -11,9 +11,17 @@ import { storage } from "./storage";
 
 const getOidcConfig = memoize(
   async () => {
+    const issuerUrl = process.env.ISSUER_URL || "https://replit.com/oidc";
+    const clientId = process.env.REPLIT_AUTH_CLIENT_ID || process.env.REPL_ID;
+
+    if (!clientId) {
+      throw new Error("Missing REPLIT_AUTH_CLIENT_ID or REPL_ID environment variable");
+    }
+
     return await client.discovery(
-      new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
-      process.env.REPL_ID!
+      new URL(issuerUrl),
+      clientId,
+      process.env.REPLIT_AUTH_CLIENT_SECRET // Optional for some providers
     );
   },
   { maxAge: 3600 * 1000 }
@@ -29,13 +37,13 @@ export function getSession() {
     tableName: "sessions",
   });
   return session({
-    secret: process.env.SESSION_SECRET!,
+    secret: process.env.SESSION_SECRET || "development-secret",
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
       maxAge: sessionTtl,
     },
   });
@@ -123,10 +131,11 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/logout", (req, res) => {
+    const clientId = process.env.REPLIT_AUTH_CLIENT_ID || process.env.REPL_ID;
     req.logout(() => {
       res.redirect(
         client.buildEndSessionUrl(config, {
-          client_id: process.env.REPL_ID!,
+          client_id: clientId!,
           post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
         }).href
       );

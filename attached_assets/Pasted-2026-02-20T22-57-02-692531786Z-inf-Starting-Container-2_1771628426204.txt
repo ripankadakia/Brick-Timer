@@ -1,0 +1,53 @@
+2026-02-20T22:57:02.692531786Z [inf]  Starting Container
+2026-02-20T22:57:03.590013850Z [inf]  10:57:03 PM [express] serving on port 8080
+2026-02-20T22:57:03.590029642Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-20T22:57:03.590033289Z [inf]  
+2026-02-20T22:57:03.590038682Z [inf]  > rest-express@1.0.0 start
+2026-02-20T22:57:03.590042101Z [inf]  
+2026-02-20T22:57:03.590043117Z [inf]  > NODE_ENV=production node dist/index.js
+2026-02-20T22:59:53.646363697Z [inf]  10:59:48 PM [express] GET /api/auth/user 401 in 7ms :: {"message":"Unauthorized"}
+2026-02-20T22:59:53.646369136Z [inf]  10:59:50 PM [express] GET /api/login 302 in 9ms
+2026-02-20T22:59:54.256067705Z [err]  /app/node_modules/pg-pool/index.js:45
+2026-02-20T22:59:54.256070723Z [err]      Error.captureStackTrace(err)
+2026-02-20T22:59:54.256074065Z [err]            ^
+2026-02-20T22:59:54.256076855Z [err]  
+2026-02-20T22:59:54.256079715Z [err]  error: relation "users" does not exist
+2026-02-20T22:59:54.256082917Z [err]      at /app/node_modules/pg-pool/index.js:45:11
+2026-02-20T22:59:54.256086350Z [err]      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-02-20T22:59:54.256089423Z [err]      at async file:///app/node_modules/drizzle-orm/node-postgres/session.js:83:22
+2026-02-20T22:59:54.256092308Z [err]      at async DbStorage.upsertUser (file:///app/dist/index.js:137:20)
+2026-02-20T22:59:54.256095357Z [err]      at async upsertUser (file:///app/dist/index.js:306:3)
+2026-02-20T22:59:54.256097979Z [err]      at async Strategy.verify [as _verify] (file:///app/dist/index.js:324:5) {
+2026-02-20T22:59:54.256100439Z [err]    length: 104,
+2026-02-20T22:59:54.256103505Z [err]    severity: 'ERROR',
+2026-02-20T22:59:54.256106005Z [err]    code: '42P01',
+2026-02-20T22:59:54.256108700Z [err]    detail: undefined,
+2026-02-20T22:59:54.256111183Z [err]    hint: undefined,
+2026-02-20T22:59:54.256113832Z [err]    position: '13',
+2026-02-20T22:59:54.256116428Z [err]    internalPosition: undefined,
+2026-02-20T22:59:54.256119078Z [err]    internalQuery: undefined,
+2026-02-20T22:59:54.256121609Z [err]    where: undefined,
+2026-02-20T22:59:54.256124226Z [err]    schema: undefined,
+2026-02-20T22:59:54.256127468Z [err]    table: undefined,
+2026-02-20T22:59:54.256130570Z [err]    column: undefined,
+2026-02-20T22:59:54.256133194Z [err]    dataType: undefined,
+2026-02-20T22:59:54.256135671Z [err]    constraint: undefined,
+2026-02-20T22:59:54.256138303Z [err]    file: 'parse_relation.c',
+2026-02-20T22:59:54.256141140Z [err]    line: '1449',
+2026-02-20T22:59:54.256916034Z [err]    routine: 'parserOpenTable'
+2026-02-20T22:59:54.256919008Z [err]  }
+2026-02-20T22:59:54.256921908Z [err]  
+2026-02-20T22:59:54.256925476Z [err]  Node.js v22.22.0
+2026-02-20T22:59:54.768351927Z [err]  npm warn config production Use `--omit=dev` instead.
+2026-02-20T22:59:54.774313371Z [inf]  
+2026-02-20T22:59:54.774317535Z [inf]  > rest-express@1.0.0 start
+2026-02-20T22:59:54.774320898Z [inf]  > NODE_ENV=production node dist/index.js
+2026-02-20T22:59:54.774324465Z [inf]  
+2026-02-20T22:59:55.261691370Z [inf]  10:59:55 PM [express] serving on port 8080
+2026-02-20T22:59:55.640705847Z [err]  ResponseBodyError: server responded with an error in the response body
+2026-02-20T22:59:55.640708923Z [err]      at checkOAuthBodyError (file:///app/node_modules/oauth4webapi/build/index.js:924:19)
+2026-02-20T22:59:55.640711675Z [err]      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-02-20T22:59:55.640715450Z [err]      at async processGenericAccessTokenResponse (file:///app/node_modules/oauth4webapi/build/index.js:1202:5)
+2026-02-20T22:59:55.640718735Z [err]      at async processAuthorizationCodeOAuth2Response (file:///app/node_modules/oauth4webapi/build/index.js:1436:20)
+2026-02-20T22:59:55.640721841Z [err]      at async Module.authorizationCodeGrant (file:///app/node_modules/openid-client/build/index.js:980:18)
+2026-02-20T22:59:55.640724849Z [err]      at async Strategy.authorizationCodeGrant (file:///app/node_modules/openid-client/build/passport.js:210:28)

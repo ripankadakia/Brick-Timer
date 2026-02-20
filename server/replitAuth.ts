@@ -103,7 +103,8 @@ export async function setupAuth(app: Express) {
   const ensureStrategy = (domain: string) => {
     const strategyName = `replitauth:${domain}`;
     if (!registeredStrategies.has(strategyName)) {
-      const callbackDomain = process.env.APP_DOMAIN || domain;
+      let callbackDomain = process.env.APP_DOMAIN || domain;
+      callbackDomain = callbackDomain.replace(/^https?:\/\//, "");
 
       const strategy = new Strategy(
         {

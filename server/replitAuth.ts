@@ -100,8 +100,6 @@ export async function setupAuth(app: Express) {
     const strategyName = `replitauth:${domain}`;
     if (!registeredStrategies.has(strategyName)) {
       const callbackDomain = process.env.APP_DOMAIN || domain;
-      const clientId = process.env.REPLIT_AUTH_CLIENT_ID || process.env.REPL_ID;
-      const clientSecret = process.env.REPLIT_AUTH_CLIENT_SECRET;
 
       const strategy = new Strategy(
         {
@@ -112,8 +110,6 @@ export async function setupAuth(app: Express) {
         },
         verify,
       );
-      (strategy as any).options.client_id = clientId;
-      (strategy as any).options.client_secret = clientSecret;
       passport.use(strategy);
       registeredStrategies.add(strategyName);
     }

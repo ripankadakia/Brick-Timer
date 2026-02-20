@@ -140,12 +140,12 @@ export class MemStorage implements IStorage {
     }
 
     // Convert date string to Date if provided
-    const updateData: Partial<Workout> = workoutUpdate.date 
-      ? {
-          ...workoutUpdate,
-          date: typeof workoutUpdate.date === 'string' ? new Date(workoutUpdate.date) : workoutUpdate.date,
-        }
-      : workoutUpdate;
+    const updateData: Partial<Workout> = {
+      ...workoutUpdate,
+      date: workoutUpdate.date 
+        ? (typeof workoutUpdate.date === 'string' ? new Date(workoutUpdate.date) : workoutUpdate.date)
+        : undefined,
+    } as any;
 
     // Update workout
     const updatedWorkout: Workout = {

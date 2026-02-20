@@ -3,9 +3,10 @@ import ActiveTimer from '../ActiveTimer';
 
 export default function ActiveTimerExample() {
   const [isRunning, setIsRunning] = useState(true);
-  
+
   return (
-    <ActiveTimer 
+    <ActiveTimer
+      workoutName="Sample Workout"
       currentSegmentName="Run"
       currentSegmentTime={127}
       totalTime={245}
@@ -13,6 +14,7 @@ export default function ActiveTimerExample() {
       isRunning={isRunning}
       onTogglePause={() => setIsRunning(!isRunning)}
       onCompleteSegment={() => console.log('Segment completed')}
+      onDiscardWorkout={() => console.log('Workout discarded')}
     />
   );
 }

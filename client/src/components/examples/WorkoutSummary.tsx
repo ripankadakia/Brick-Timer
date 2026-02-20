@@ -2,7 +2,8 @@ import WorkoutSummary from '../WorkoutSummary';
 
 export default function WorkoutSummaryExample() {
   return (
-    <WorkoutSummary 
+    <WorkoutSummary
+      workoutName="Sample Workout"
       segments={[
         { name: "Run", duration: 180 },
         { name: "Bike", duration: 240 },
@@ -10,7 +11,7 @@ export default function WorkoutSummaryExample() {
         { name: "Run", duration: 150 }
       ]}
       totalTime={720}
-      onDone={() => console.log('Done clicked')}
+      onStartNewWorkout={() => console.log('Start new workout clicked')}
     />
   );
 }

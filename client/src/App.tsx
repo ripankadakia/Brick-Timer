@@ -13,14 +13,34 @@ import LandingPage from "@/pages/LandingPage";
 import { useAuth } from "@/hooks/useAuth";
 import { WorkoutProvider } from "@/contexts/WorkoutContext";
 
+function LoginRedirectPage() {
+  useEffect(() => {
+    window.location.href = "/api/login";
+  }, []);
+
+  return <LandingPage />;
+}
+
 // Reference: blueprint:javascript_log_in_with_replit
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  if (isLoading) {
+    return (
+      <Switch>
+        <Route path="/" component={LandingPage} />
+        <Route path="/welcome" component={LandingPage} />
+      </Switch>
+    );
+  }
+
   return (
     <Switch>
-      {isLoading || !isAuthenticated ? (
-        <Route path="/" component={LandingPage} />
+      {!isAuthenticated ? (
+        <>
+          <Route path="/" component={LoginRedirectPage} />
+          <Route path="/welcome" component={LandingPage} />
+        </>
       ) : (
         <>
           <Route path="/" component={TimerPage} />
